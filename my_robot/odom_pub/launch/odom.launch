@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<launch>
+
+    <node pkg="tf2_ros" type="static_transform_publisher" name="tf_fixed_odom" args="0 0 0 0 0 0 1 fixed_frame odom" />    
+    <node pkg="tf2_ros" type="static_transform_publisher" name="tf_footprint_link" args="0 0 0 0 0 0 1 base_footprint base_link" />    
+    <node pkg="tf2_ros" type="static_transform_publisher" name="tf_base_link_imu" args="0 0 0.08 0 0 0 1 base_link imu_link" />    
+    <node pkg="tf2_ros" type="static_transform_publisher" name="tf_base_link_laser" args="-0.01 0 0.17 0 0 0 1 base_link laser" />    
+
+    <node name="odometer" pkg="odom_pub" type="odometer_publisher.py" output="screen">
+    </node>
+
+</launch>

@@ -1,0 +1,4 @@
+<launch>
+    <node name="mtr_encdr" pkg="wheels" type="encoder_publisher.py" respawn="true" respawn_delay="2">
+    </node>
+</launch>

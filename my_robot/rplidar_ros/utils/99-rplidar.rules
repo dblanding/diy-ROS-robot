@@ -1,0 +1,8 @@
+
+# Udev rule for Serial to USB converter for communication with RPLidar
+#
+# Check dev info: udevadm info -a -p  $(udevadm info -q path -n /dev/ttyUSB1)
+# Reload udev: sudo udevadm control --reload-rules & udevadm trigger
+#
+
+ACTION=="add", ATTRS{product}=="CP2102 USB to UART Bridge Controller", ATTRS{manufacturer}=="Silicon Labs", SYMLINK+="ttyUSB_LIDAR"

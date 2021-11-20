@@ -1,0 +1,69 @@
+<?xml version="1.0"?> 
+<launch>
+
+    <!-- Launch wheel encoder tick publisher node -->
+    <node name="mtr_encdr" pkg="wheels" type="encoder_publisher.py" output="screen">
+    </node>
+
+    <arg name="serial_port" default="/dev/ttyUSB_IMU" />
+    <arg name="frame_id" default="imu_link" />
+    <arg name="operation_mode" default="IMU"/>
+    <arg name="oscillator" default="INTERNAL" />
+    <arg name="reset_orientation" default="true" />
+    <arg name="frequency" default="50" /> 
+    <arg name="use_magnetometer" default="false" />
+    <arg name="use_temperature" default="false" /> 
+
+    <!-- Launch IMU node -->
+    <node pkg="ros_imu_bno055" type="imu_ros.py" name="ros_imu_bno055_node" output="screen">
+        <param name="serial_port" value="$(arg serial_port)" />
+        <param name="frame_id" value="$(arg frame_id)" />
+        <param name="operation_mode" value="$(arg operation_mode)" />
+        <param name="oscillator" value="$(arg oscillator)" />
+        <param name="reset_orientation" value = "$(arg reset_orientation)" />
+        <param name="frequency" value="$(arg frequency)" />
+        <param name="use_magnetometer" value="$(arg use_magnetometer)" />    
+        <param name="use_temperature" value="$(arg use_temperature)" />    
+    </node>
+
+    <!-- Launch RPLidar node -->
+    <node name="rplidarNode"          pkg="rplidar_ros"  type="rplidarNode" output="screen">
+        <param name="serial_port"         type="string" value="/dev/ttyUSB_LIDAR"/>
+        <param name="serial_baudrate"     type="int"    value="115200"/><!--A1/A2 -->
+        <!--param name="serial_baudrate"     type="int"    value="256000"--><!--A3 -->
+        <param name="frame_id"            type="string" value="laser"/>
+        <param name="inverted"            type="bool"   value="false"/>
+        <param name="angle_compensate"    type="bool"   value="true"/>
+    </node>
+
+    <!-- Broadcast tf static coordinate frames -->
+    <node pkg="tf2_ros" type="static_transform_publisher" name="tf_fixed_odom" args="0 0 0 0 0 0 1 fixed_frame odom" />    
+    <node pkg="tf2_ros" type="static_transform_publisher" name="tf_footprint_link" args="0 0 0 0 0 0 1 base_footprint base_link" />    
+    <node pkg="tf2_ros" type="static_transform_publisher" name="tf_base_link_imu" args="0 0 0.08 0 0 0 1 base_link imu_link" />    
+    <node pkg="tf2_ros" type="static_transform_publisher" name="tf_base_link_laser" args="-0.01 0 0.17 0 0 0 1 base_link laser" />    
+
+    <!-- Launch odometry publisher node -->
+    <node name="odometer" pkg="odom_pub" type="odometer_publisher.py" output="screen">
+    </node>
+
+    <!-- Launch robot-pose-ekf node -->
+    <!-- Extended Kalman Filter from robot_pose_ekf Node-->
+    <!-- Subscribe: /odom, /imu/data, /vo -->
+    <!-- Publish: /robot_pose_ekf/odom_combined -->
+
+    <remap from="/imu_data" to="/imu/data" />
+  
+    <node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf">
+        <param name="output_frame" value="odom"/>
+        <param name="base_footprint_frame" value="base_footprint"/>
+        <param name="freq" value="30.0"/>
+        <param name="sensor_timeout" value="1.0"/>
+        <param name="odom_used" value="true"/>
+        <param name="imu_used" value="true"/>
+        <param name="vo_used" value="false"/>
+        <param name="gps_used" value="false"/>
+        <param name="debug" value="false"/>
+        <param name="self_diagnose" value="false"/>
+    </node>
+
+</launch>
