@@ -42,8 +42,8 @@ B = 40
 
 TICKS_PER_METER = 1880  # Number of encoder ticks per meter of travel
 TRACK_WIDTH = .163  # Wheel Separation Distance (meters)
-TFF = 4  # Turning Fudge Factor amplifies turning response
-MIN_PWM_VAL = 30  # Minimum PWM value that motors will turn
+TFF = 1  # Turning Fudge Factor amplifies turning response
+MIN_PWM_VAL = 50  # Minimum PWM value that motors will turn
 MAX_PWM_VAL = 255  # Maximum allowable PWM value
 
 cmd_vel_x = 0  # linear (x) component of cmd_vel (meters/sec)
@@ -100,7 +100,7 @@ def set_mtr_spd(pi):
     if right_spd > MAX_PWM_VAL:
         right_spd = MAX_PWM_VAL
     if right_spd < MIN_PWM_VAL:
-        righ_spd = 0
+        right_spd = 0
 
     # Send speed commands to the motors
     pi.set_PWM_dutycycle(left_mtr_spd_pin, left_spd)

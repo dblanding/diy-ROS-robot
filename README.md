@@ -17,7 +17,7 @@ And here it is fully functional, powered up and ready to go.
 
 With my background in mechanical engineering, I have learned to value "elegant simplicity" in design, with a preference for readily available components, assembled with minimal modification in a configuration that makes them all really easy to access. If a component goes bad, changing it out is fast and simple. I try to avoid the situation where a component is "buried" deep inside and hard to access.
 
-The most complicated part I had to make was the 1/4 x 5 x 12 inch long piece of oak that I purchased from Home Depot. Using only moderate precision, I drilled holes wherever they were needed. Everything else is a readily available as an off-the-shelf componenent. For example, the entire wheel/motor/encoder assembly including the lower blue anodized plate, the upper clear plastic plate and the brass standoffs came from an [Elegoo Tumbller](https://www.amazon.com/dp/B07QWJH77V?psc=1&ref=ppx_yo2_dt_b_product_details).
+The most complicated part I had to make was the 1/4 x 5 x 12 inch long piece of oak that I purchased from Home Depot. Using only moderate precision, I drilled holes wherever they were needed. Everything else is readily available as an off-the-shelf componenent. For example, the entire wheel/motor/encoder assembly including the lower blue anodized plate, the upper clear plastic plate and the brass standoffs came from an [Elegoo Tumbller](https://www.amazon.com/dp/B07QWJH77V?psc=1&ref=ppx_yo2_dt_b_product_details).
 
 ![Elegoo Tumbller Self-Balancing Robot Car](images/elegoo-tumbller.jpg)
 
