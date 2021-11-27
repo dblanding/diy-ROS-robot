@@ -131,6 +131,6 @@ To operate the robot, refer to the [operating instructions](operate-robot/operat
 ### DIY robot makes its maiden voyage
 On 11/27/21, the DIY robot made its first trip under the control of the ROS Navigation Stack. It wasn't a very smooth or efficient looking route but the robot managed to complete its first trip to a goal pose specified in RVIZ.
 
-![First excursion using RVIZ](videos/IMG_2534.MOV)
+![First excursion using RVIZ](videos/IMG_2534.mp4)
 
 -Doug
