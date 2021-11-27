@@ -47,7 +47,7 @@ TICKS_PER_METER = 1880  # Number of encoder ticks per meter of travel
 TRACK_WIDTH = .163  # Wheel Separation Distance (meters)
 MIN_PWM_VAL = 10  # Minimum PWM value that motors will turn
 MAX_PWM_VAL = 250  # Maximum allowable PWM value
-MTR_TRIM = 3  # int value to trim R/L motor difference (+ to boost left)
+MTR_TRIM = 3  # int value to trim R/L motor difference (+ to boost Left)
 new_ttr = False  # Flag signifying target tick rate values are new
 L_ttr = 0  # Left wheel target tick rate
 R_ttr = 0  # Right wheel target tick rate
@@ -57,10 +57,11 @@ L_mode = 'OFF'  # motor modes: 'FWD', 'REV', 'OFF'
 R_mode = 'OFF'
 
 def listener():
+    """Listen to cmd_vel topic. Send Twist msg to callback. """
     rospy.Subscriber("/cmd_vel", Twist, listener_callback)
 
 def listener_callback(msg):
-    """Extract linear.x and angular.z from cmd_vel"""
+    """Extract linear.x and angular.z from Twist msg."""
     cmd_vel_x = msg.linear.x  # meters/sec
     cmd_vel_z = msg.angular.z  # radians/sec
     convert_cmd_vels_to_target_tick_rates(cmd_vel_x, cmd_vel_z)
@@ -69,7 +70,7 @@ def convert_cmd_vels_to_target_tick_rates(x, theta):
     """
     Convert x and theta (target velocities) to L and R target tick rates.
 
-    Store target tick rates in global values.
+    Save target tick rates in global values.
     Set global flag to signify new target tick rate values.
     """
 
@@ -168,8 +169,8 @@ def set_mtr_spd(pi, latr, ratr):
     # Uncomment these next lines to see the robot's actual driving speed
     '''
     target_speed = ((R_ttr + L_ttr)/2) / TICKS_PER_METER
-    car_speed = ((R_atr + L_atr) / 2) / TICKS_PER_METER
-    rospy.loginfo(f"Target Speed = {target_speed:.2f}\tCar speed = {car_speed:.2f} meters/sec")
+    actual_speed = ((R_atr + L_atr) / 2) / TICKS_PER_METER
+    rospy.loginfo(f"Target Speed = {target_speed:.2f}\tActual speed = {actual_speed:.2f} meters/sec")
     '''
 
 class Decoder:
@@ -277,7 +278,7 @@ if __name__ == '__main__':
     prev_right_pos = 0
     prev_time = rospy.Time.now().to_sec()
     while not rospy.is_shutdown():
-        # publish cumulative tick data every cycle
+        # publish cumulative tick data
         left_pub_ticks.publish(left_pos)
         right_pub_ticks.publish(right_pos)
 
@@ -291,7 +292,7 @@ if __name__ == '__main__':
         prev_time = rospy.Time.now().to_sec()
         L_atr = delta_left_pos / delta_time
         R_atr = delta_right_pos / delta_time
-        
+
         # Set motor speeds
         set_mtr_spd(pi, L_atr, R_atr)
 
