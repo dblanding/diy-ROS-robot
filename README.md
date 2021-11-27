@@ -21,9 +21,8 @@ The most complicated part I had to make was the 1/4 x 5 x 12 inch long piece of 
 
 ![Elegoo Tumbller Self-Balancing Robot Car](images/elegoo-tumbller.jpg)
 
-I happen to be much more facile with Python than with C++, so wherever I have a
-choice, I prefer to use Python for all my nodes. The `my_robot` folder contains
-all the code that goes in robot's catkin_ws/src directory.
+### Configuring ROS on board the robot
+The `my_robot` folder contains all the code that goes in robot's catkin_ws/src directory.
 
 After starting roscore on the desktop (raspi4), I ssh to robot, start pigpiod, then launch all of robot's onboard nodes.
 
@@ -112,16 +111,26 @@ RPLIDAR S/N: DEA4EDF9C7E29BCEA7E39EF24E774304
 [INFO] [1637484000.010147]: IMU is working now in IMU mode!
 ```
 
-The tf tree is displayed wiith the command `rosrun rqt_tf_tree rqt_tf_tree`
-
-![TF tree](images/tf-tree.png)
-
-Then from raspi4:
-* I launch rviz
-* And use keyboard_telop to start publishing /cmd_vel commands to drive the robot around.
+### The robot's position and orientation within its environment can be visualized using RVIZ.
 
 ![RVIZ](images/rviz.png)
 
-I will continue to fill in more details as progress continues.
+But this is just the beginning!
+
+### Using the ROS Navigation Stack
+This is where ROS really shines. This is what made me realize that there is no future in me trying to reinvent all the robotics algorithms for myself. With ROS, all the heavy lifting has been done. Just issue a couple simple commands and you get a map. A couple of clicks in RVIZ and ROS will take your robot from point A to point B (on the map that it made) without colliding with anything along the way, using sophisticated algoithms such as:
+* SLAM / Mapping
+* Localization using AMCL
+* Path Planning to find the best route from initial pose to goal pose.
+
+### Configuring ROS on the Raspi4
+The robo_nav folder contains all the code that goes in raspi4's catkin_ws/src directory.
+And there really isn't very much there. Just some launch files, parameters, and maps.
+
+To operate the robot, refer to the [operating instructions](operate-robot/operate-robot.md).
+### DIY robot makes its maiden voyage
+On 11/27/21, the DIY robot made its first trip under the control of the ROS Navigation Stack. It wasn't a very smooth or efficient looking route but the robot managed to complete its first trip to a goal pose specified in RVIZ.
+
+![First excursion using RVIZ](videos/IMG_2534.MOV)
 
 -Doug
