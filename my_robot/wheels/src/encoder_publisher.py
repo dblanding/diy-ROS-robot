@@ -12,7 +12,6 @@ Decoder class adapted from rotary_encoder example at:
 https://abyz.me.uk/rpi/pigpio/examples.html
 Hook up A and B so that values increase when moving forward.
 pigpio daemon must be running. Launch with 'sudo pigpiod'.
-
 """
 
 import rospy
@@ -48,6 +47,8 @@ TRACK_WIDTH = .163  # Wheel Separation Distance (meters)
 MIN_PWM_VAL = 10  # Minimum PWM value that motors will turn
 MAX_PWM_VAL = 250  # Maximum allowable PWM value
 MTR_TRIM = 3  # int value to trim R/L motor difference (+ to boost Left)
+MIN_X_VEL = 0.2  # minimum x velocity robot can manage (m/s)
+turning_in_place = False  # Flag signifying robot is turning in place
 new_ttr = False  # Flag signifying target tick rate values are new
 L_ttr = 0  # Left wheel target tick rate
 R_ttr = 0  # Right wheel target tick rate
@@ -71,10 +72,17 @@ def convert_cmd_vels_to_target_tick_rates(x, theta):
     Convert x and theta (target velocities) to L and R target tick rates.
 
     Save target tick rates in global values.
-    Set global flag to signify new target tick rate values.
+    Set global flag to signify whether target tick rate values are new.
+    Set global flag to signify whether robot is turning in place.
     """
 
-    global L_ttr, R_ttr, new_ttr
+    global L_ttr, R_ttr, new_ttr, turning_in_place
+
+    # Set global flag to signify turning in place.
+    if x < MIN_X_VEL * TICKS_PER_METER and theta:
+        turning_in_place = True
+    else:
+        turning_in_place = False
     
     # Superimpose linear and angular components of robot velocity
     vel_L_wheel = x - (theta * (TRACK_WIDTH / 2))
@@ -92,7 +100,7 @@ def convert_cmd_vels_to_target_tick_rates(x, theta):
         R_ttr = R_rate
         new_ttr = True
 
-def set_mtr_spd(pi, latr, ratr):
+def set_mtr_spd(pi, latr, ratr, newness=0):
     """
     Derive motor speed and mode from L & R tick rates. Drive motors.
 
@@ -102,6 +110,18 @@ def set_mtr_spd(pi, latr, ratr):
     a mode for the motors: FWD, REV, or OFF. One reason for the "OFF" mode
     owes to the static friction of the motors. If we command a motor speed
     too low, the motors will just whine and not move.
+
+    The problem of commanding the motors to make subtle, small adjustments is
+    especially problematic when making a pure turn without any simultaneous
+    translation in x. The wheel speeds needed to make such a 30 degree turn
+    are equivalent to those needed to drive the robot 0.03 meters in x.
+
+    To address this problem, the caller of this function can supply an integer
+    value to the newness parameter. This value is used to temporarily boost
+    the PWM signal sent to the motors, as is needed during "in-place" turns.
+    This is intended to give a temporary initial boost to the PWM signal to
+    get things rolling. The caller should then gradually decrement the value
+    of newness in subsequent calls.
     """
 
     global new_ttr, L_spd, R_spd, L_mode, R_mode
@@ -160,17 +180,17 @@ def set_mtr_spd(pi, latr, ratr):
 
     # Apply R/L MTR_TRIM compensation and send PWM values to the motors
     if (L_mode == 'FWD' and R_mode == 'FWD') or (L_mode == 'REV' and R_mode == 'REV'):
-        pi.set_PWM_dutycycle(left_mtr_spd_pin, L_spd + MTR_TRIM)
-        pi.set_PWM_dutycycle(right_mtr_spd_pin, R_spd - MTR_TRIM)
+        pi.set_PWM_dutycycle(left_mtr_spd_pin, L_spd + MTR_TRIM + newness)
+        pi.set_PWM_dutycycle(right_mtr_spd_pin, R_spd - MTR_TRIM + newness)
     else:
-        pi.set_PWM_dutycycle(left_mtr_spd_pin, L_spd)
-        pi.set_PWM_dutycycle(right_mtr_spd_pin, R_spd)
+        pi.set_PWM_dutycycle(left_mtr_spd_pin, L_spd + newness)
+        pi.set_PWM_dutycycle(right_mtr_spd_pin, R_spd + newness)
 
     # Uncomment these next lines to see the robot's actual driving speed
     '''
     target_speed = ((R_ttr + L_ttr)/2) / TICKS_PER_METER
     actual_speed = ((R_atr + L_atr) / 2) / TICKS_PER_METER
-    rospy.loginfo(f"Target Speed = {target_speed:.2f}\tActual speed = {actual_speed:.2f} meters/sec")
+    rospy.loginfo(f"Target = {target_speed:.2f}\tActual = {actual_speed:.2f} m/s")
     '''
 
 class Decoder:
@@ -276,6 +296,7 @@ if __name__ == '__main__':
     # Publish encoder data
     prev_left_pos = 0
     prev_right_pos = 0
+    newness = 0
     prev_time = rospy.Time.now().to_sec()
     while not rospy.is_shutdown():
         # publish cumulative tick data
@@ -293,8 +314,16 @@ if __name__ == '__main__':
         L_atr = delta_left_pos / delta_time
         R_atr = delta_right_pos / delta_time
 
+        # About to initiate a turn in place?
+        if new_ttr and turning_in_place:
+            newness = 20
+
         # Set motor speeds
-        set_mtr_spd(pi, L_atr, R_atr)
+        set_mtr_spd(pi, L_atr, R_atr, newness)
+
+        # Decrement newness toward zero
+        if newness:
+            newness -= 1
 
         rate.sleep()
 
