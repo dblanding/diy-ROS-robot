@@ -1,6 +1,5 @@
 # Robot Operation / Current Status
 This is intended to be an up-to-date summary of how to run the robot.
-It will change over time. I will try to keep it up-to-date.
 
 November 27, 2021
 ### SLAM Mapping

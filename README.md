@@ -24,6 +24,8 @@ The most complicated part I had to make was the 1/4 x 5 x 12 inch long piece of 
 ### Configuring ROS on board the robot
 The `my_robot` folder contains all the code that goes in robot's catkin_ws/src directory.
 
+[Here](setup-operate/setup-2nd-computer.md) are the details of the configuration and setup of the robot onboard computer.
+
 After starting roscore on the desktop (raspi4), I ssh to robot, start pigpiod, then launch all of robot's onboard nodes.
 
 ```
@@ -124,10 +126,12 @@ This is where ROS really shines. This is what made me realize that there is no f
 * Path Planning to find the best route from initial pose to goal pose.
 
 ### Configuring ROS on the Raspi4
-The robo_nav folder contains all the code that goes in raspi4's catkin_ws/src directory.
+The `robo_nav` folder contains all the code that goes in raspi4's catkin_ws/src directory.
 And there really isn't very much there. Just some launch files, parameters, and maps.
 
-To operate the robot, refer to the [operating instructions](operate-robot/operate-robot.md).
+[Here](setup-operate/ubuntu-install.md) are the details of the setup and configuration of the raspi4 computer.
+
+To operate the robot, refer to these [operating instructions](setup-operate/operate-robot.md).
 ### DIY robot makes its maiden voyage
 On 11/27/21, the DIY robot made its first trip under the control of the ROS Navigation Stack. It wasn't a very smooth or efficient looking route but the robot managed to complete its first trip to a goal pose specified in RVIZ.
 
