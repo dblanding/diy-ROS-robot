@@ -7,7 +7,7 @@
   <node pkg="tf" type="static_transform_publisher" name="tf_map_to_odom" args="0 0 0 0 0 0 1 map odom" />
 
   <!-- Map File -->
-  <arg name="map_file" default="$(find robo_nav)/maps/officemap.yaml"/>
+  <arg name="map_file" default="$(find robot_nav)/maps/officemap.yaml"/>
 	
   <!-- Map Server -->
   <!-- Publish: /map, /map_metadata -->
@@ -22,14 +22,14 @@
   <!-- Subscribe: /move_base_simple/goal -->
   <!-- Publish: /cmd_vel -->
   <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
-    <rosparam file="$(find robo_nav)/param/costmap_common_params.yaml" command="load" ns="global_costmap" />
-    <rosparam file="$(find robo_nav)/param/costmap_common_params.yaml" command="load" ns="local_costmap" />
-    <rosparam file="$(find robo_nav)/param/local_costmap_params.yaml" command="load" />
-    <rosparam file="$(find robo_nav)/param/global_costmap_params.yaml" command="load" />
-    <rosparam file="$(find robo_nav)/param/dwa_local_planner_params.yaml" command="load" />
-    <rosparam file="$(find robo_nav)/param/move_base_params.yaml" command="load" />
-    <rosparam file="$(find robo_nav)/param/global_planner_params.yaml" command="load" />
-    <rosparam file="$(find robo_nav)/param/navfn_global_planner_params.yaml" command="load" />
+    <rosparam file="$(find robot_nav)/param/costmap_common_params.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find robot_nav)/param/costmap_common_params.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find robot_nav)/param/local_costmap_params.yaml" command="load" />
+    <rosparam file="$(find robot_nav)/param/global_costmap_params.yaml" command="load" />
+    <rosparam file="$(find robot_nav)/param/dwa_local_planner_params.yaml" command="load" />
+    <rosparam file="$(find robot_nav)/param/move_base_params.yaml" command="load" />
+    <rosparam file="$(find robot_nav)/param/global_planner_params.yaml" command="load" />
+    <rosparam file="$(find robot_nav)/param/navfn_global_planner_params.yaml" command="load" />
 
   </node>
 
