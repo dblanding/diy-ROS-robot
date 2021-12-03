@@ -137,4 +137,9 @@ On 11/27/21, the DIY robot made its first trip under the control of the ROS Navi
 
 ![First excursion using RVIZ](videos/IMG_2534.mp4)
 
+### Navgatiion tuning
+As I got started working on navigation tuning, I was getting a lot of errors that seemed like they may have resulted from information "drop outs" from the robot.
+
+Odometry, IMU and Laser topics were blinking red on RVIZ, apparently not always arriving from the robot computer. As shown in more detail in [Nav Parameter Tuning](nav_param_tuning/nav_parameter_tuning_notes.md), the CPU of the raspi4 was topped out at 100%.
+
 -Doug
