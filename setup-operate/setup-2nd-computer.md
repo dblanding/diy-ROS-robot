@@ -16,6 +16,9 @@
 * [Download & Install pigpio](http://abyz.me.uk/rpi/pigpio/download.html)
 * Install python mathutils library `pip install mathutils` (used to normalize quaternion)
 * Install robot_pose_ekf `sudo apt install ros-noetic-robot-pose-ekf`
+* Install gmapping and navigation
+    * `sudo apt install ros-noetic-gmapping`
+    * `sudo apt install ros-noetic-navigation`
 * Install udev rules to correctly identify USB ports on which IMU and Laser are connected
     * [ROS driver for the BNO055 IMU using serial communication](https://github.com/RoboticArts/ros_imu_bno055) shows how to do it for the BNO055 imu.
 ```

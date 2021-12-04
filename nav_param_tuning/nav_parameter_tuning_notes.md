@@ -18,11 +18,7 @@ In the second screenshot, you can see where I hit Ctrl-c to kill the navigation 
 
 ![second](figures/Screenshot2021-12-03_07-54-55.png)
 
-Finally, in this third screenshot, I killed RVIZ at roughly 25 seconds ago. There is actually quite a lot of other stuff still running on each of 5 workspaces. 
+Clearly, running navigation and RVIZ simultaneously is too much for the Raspi4 CPU to handle. Therefore, in order to balance the load, I moved the robot_nav package off the raspi4 and onto the robot computer. This third screenshot shows the CPU load hovering around 80% on robot after launching bringup and robot_nav.
 
-![third](figures/Screenshot2021-12-03_07-55-34.png)
-
-For reference, this next screenshot shows the system monitor with nothing else going on except 4 termnial windows: roscore and 3 idle ones.
-
-![rest](figures/Screenshot2021-12-03_08-26-05.png)
+![third](figures/Screenshot2021-12-04_06-08-18.png)
 

@@ -5,8 +5,8 @@ map_topic: /map
 subscribe_to_updates: true
 global_frame: odom
 robot_base_frame: base_link
-update_frequency: 30.0
-publish_frequency: 30.0
+update_frequency: 4.0
+publish_frequency: 4.0
 rolling_window: false
 
 plugins:

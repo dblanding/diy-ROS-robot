@@ -114,32 +114,29 @@ RPLIDAR S/N: DEA4EDF9C7E29BCEA7E39EF24E774304
 ```
 
 ### The robot's position and orientation within its environment can be visualized using RVIZ.
-
+RVIZ is launched from and runs on the rasp4 (remote PC). Because it imposes such a significant load on the raspi4's CPU, there is very little capacity left over to handle other large computaiional tasks (such as navigation).
 ![RVIZ](images/rviz.png)
 
-But this is just the beginning!
-
 ### Using the ROS Navigation Stack
-This is where ROS really shines. This is what made me realize that there is no future in me trying to reinvent all the robotics algorithms for myself. With ROS, all the heavy lifting has been done. Just issue a couple simple commands and you get a map. A couple of clicks in RVIZ and ROS will take your robot from point A to point B (on the map that it made) without colliding with anything along the way, using sophisticated algoithms such as:
+This is where ROS really shines. This is what makes ROS so powerful. There is no need to reinvent all the robotics algorithms for yourself. With ROS, all the heavy lifting has been done. Just issue a couple simple commands and you get a map. A couple of clicks in RVIZ and ROS will take your robot from point A to point B (on the map that it made) without colliding with anything along the way, using sophisticated algoithms such as:
 * SLAM / Mapping
 * Localization using AMCL
 * Path Planning to find the best route from initial pose to goal pose.
 
-### Configuring ROS on the Raspi4
-The `robo_nav` folder contains all the code that goes in raspi4's catkin_ws/src directory.
-And there really isn't very much there. Just some launch files, parameters, and maps.
+Navigation is launched from the `robo_nav` package, residing inside the `my_robot` folder. And there really isn't very much there. Just some launch files, parameters, and maps.
+
+To operate the robot, refer to these [operating instructions](setup-operate/operate-robot.md).
 
 [Here](setup-operate/ubuntu-install.md) are the details of the setup and configuration of the raspi4 computer.
 
-To operate the robot, refer to these [operating instructions](setup-operate/operate-robot.md).
 ### DIY robot makes its maiden voyage
 On 11/27/21, the DIY robot made its first trip under the control of the ROS Navigation Stack. It wasn't a very smooth or efficient looking route but the robot managed to complete its first trip to a goal pose specified in RVIZ.
 
 ![First excursion using RVIZ](videos/IMG_2534.mp4)
 
-### Navgatiion tuning
-As I got started working on navigation tuning, I was getting a lot of errors that seemed like they may have resulted from information "drop outs" from the robot.
+### Navgition tuning
+When I first started working on navigation tuning, I was launching the navigation nodes from the raspi4 and I was getting a lot of errors that seemed like they may have resulted from information "drop outs" from the robot.
 
-Odometry, IMU and Laser topics were blinking red on RVIZ, apparently not always arriving from the robot computer. As shown in more detail in [Nav Parameter Tuning](nav_param_tuning/nav_parameter_tuning_notes.md), the CPU of the raspi4 was topped out at 100%.
+Odometry, IMU and Laser topics were blinking red on RVIZ, apparently not always arriving from the robot computer. It turns out that the CPU of the raspi4 was topped out at 100% while trying to run both RVIZ and the navigation nodes. The issue was resolved by moving the launch of the navigation nodes from the raspi4 to the robot computer. More detail is shown in [Nav Parameter Tuning](nav_param_tuning/nav_parameter_tuning_notes.md).
 
 -Doug
