@@ -36,18 +36,21 @@ right_enc_A_pin = 23
 right_enc_B_pin = 24
 
 # An 8 bit integer value (0 - 255) is used to command motor speed
-# Approximate linear relationship between tick_rate and motor spd
-# determined empirically:  spd = M * tick_rate + B
-# Valid at linear speeds around 0.5 m/sec
-M = 0.06
-B = 35
+# Approximate relationship between tick_rate (x) and motor spd
+# determined empirically:  spd = A * x^2 + B * x + C
+# Valid at linear speeds up to around 0.25 m/sec
+A = 2.24e-4
+B = 0.0
+C = 63.1
 
-TICKS_PER_METER = 1880  # Number of encoder ticks per meter of travel
-TRACK_WIDTH = .163  # Wheel Separation Distance (meters)
-MIN_PWM_VAL = 10  # Minimum PWM value that motors will turn
-MAX_PWM_VAL = 250  # Maximum allowable PWM value
-MTR_TRIM = 3  # int value to trim R/L motor difference (+ to boost Left)
-MIN_X_VEL = 0.2  # minimum x velocity robot can manage (m/s)
+TICKS_PER_REV = 690
+WHEEL_CIRCUMFERENCE = 0.213  # meters
+TICKS_PER_METER = TICKS_PER_REV / WHEEL_CIRCUMFERENCE
+TRACK_WIDTH = .187  # Wheel Separation Distance (meters)
+MIN_PWM_VAL = int(C)  # Minimum PWM value that motors will turn
+MAX_PWM_VAL = 255  # Maximum allowable PWM value
+MTR_TRIM = 14  # int value to trim R/L motor diff (+ to boost L mtr)
+MIN_X_VEL = 0.1  # minimum x velocity robot can manage (m/s)
 turning_in_place = False  # Flag signifying robot is turning in place
 new_ttr = False  # Flag signifying target tick rate values are new
 L_ttr = 0  # Left wheel target tick rate
@@ -113,8 +116,7 @@ def set_mtr_spd(pi, latr, ratr, newness=0):
 
     The problem of commanding the motors to make subtle, small adjustments is
     especially problematic when making a pure turn without any simultaneous
-    translation in x. The wheel speeds needed to make such a 30 degree turn
-    are equivalent to those needed to drive the robot 0.03 meters in x.
+    translation in x.
 
     To address this problem, the caller of this function can supply an integer
     value to the newness parameter. This value is used to temporarily boost
@@ -128,7 +130,7 @@ def set_mtr_spd(pi, latr, ratr, newness=0):
 
     # Calculate new estimated spd values when target tick rate changes
     if new_ttr:
-        L_spd = int(M * abs(L_ttr) + B)
+        L_spd = int(A * pow(L_ttr, 2) + B * abs(L_ttr) + C)
         if L_ttr > 0:
             L_mode = 'FWD'
         elif L_ttr < 0:
@@ -136,7 +138,7 @@ def set_mtr_spd(pi, latr, ratr, newness=0):
         else:
             L_mode = 'OFF'
 
-        R_spd = int(M * abs(R_ttr) + B)
+        R_spd = int(A * pow(R_ttr, 2) + B * abs(R_ttr) + C)
         if R_ttr > 0:
             R_mode = 'FWD'
         elif R_ttr < 0:
@@ -145,7 +147,7 @@ def set_mtr_spd(pi, latr, ratr, newness=0):
             R_mode = 'OFF'
 
         new_ttr = False
-        # rospy.loginfo(f"L_mode={L_mode}\tR_mode={R_mode}\t")
+        # rospy.loginfo(f"mtr spd = {(R_spd + L_spd)/2}")
 
     # Set motor direction pins appropriately
     if L_mode == 'FWD':
@@ -168,23 +170,35 @@ def set_mtr_spd(pi, latr, ratr, newness=0):
         pi.write(right_mtr_in1_pin, 0)
         pi.write(right_mtr_in2_pin, 0)
 
-    # Limit motor speeds
-    if L_spd > MAX_PWM_VAL:
-        L_spd = MAX_PWM_VAL
-    elif L_spd < MIN_PWM_VAL:
-        L_spd = 0
-    if R_spd > MAX_PWM_VAL:
-        R_spd = MAX_PWM_VAL
-    elif R_spd < MIN_PWM_VAL:
-        R_spd = 0
-
     # Apply R/L MTR_TRIM compensation and send PWM values to the motors
     if (L_mode == 'FWD' and R_mode == 'FWD') or (L_mode == 'REV' and R_mode == 'REV'):
-        pi.set_PWM_dutycycle(left_mtr_spd_pin, L_spd + MTR_TRIM + newness)
-        pi.set_PWM_dutycycle(right_mtr_spd_pin, R_spd - MTR_TRIM + newness)
+        L_PWM_val = L_spd + MTR_TRIM + newness
+        if L_PWM_val > MAX_PWM_VAL:
+            L_PWM_val = MAX_PWM_VAL
+        elif L_PWM_val < MIN_PWM_VAL:
+            L_PWM_val = 0
+        pi.set_PWM_dutycycle(left_mtr_spd_pin, L_PWM_val)
+
+        R_PWM_val = R_spd - MTR_TRIM + newness
+        if R_PWM_val > MAX_PWM_VAL:
+            R_PWM_val = MAX_PWM_VAL
+        elif R_PWM_val < MIN_PWM_VAL:
+            R_PWM_val = 0
+        pi.set_PWM_dutycycle(right_mtr_spd_pin, R_PWM_val)
     else:
-        pi.set_PWM_dutycycle(left_mtr_spd_pin, L_spd + newness)
-        pi.set_PWM_dutycycle(right_mtr_spd_pin, R_spd + newness)
+        L_PWM_val = L_spd + newness
+        if L_PWM_val > MAX_PWM_VAL:
+            L_PWM_val = MAX_PWM_VAL
+        elif L_PWM_val < MIN_PWM_VAL:
+            L_PWM_val = 0
+        pi.set_PWM_dutycycle(left_mtr_spd_pin, L_PWM_val)
+
+        R_PWM_val = R_spd + newness
+        if R_PWM_val > MAX_PWM_VAL:
+            R_PWM_val = MAX_PWM_VAL
+        elif R_PWM_val < MIN_PWM_VAL:
+            R_PWM_val = 0
+        pi.set_PWM_dutycycle(right_mtr_spd_pin, R_PWM_val)
 
     # Uncomment these next lines to see the robot's actual driving speed
     '''
@@ -316,7 +330,7 @@ if __name__ == '__main__':
 
         # About to initiate a turn in place?
         if new_ttr and turning_in_place:
-            newness = 20
+            newness = 4
 
         # Set motor speeds
         set_mtr_spd(pi, L_atr, R_atr, newness)

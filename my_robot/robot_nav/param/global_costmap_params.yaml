@@ -1,7 +1,5 @@
 global_costmap:
-  global_frame: odom
-  #update_frequency: 30.0
-  #publish_frequency: 30.0
-  transform_tolerance: 0.21
+  global_frame: map
   resolution: 0.1
+  rolling_window: false
 

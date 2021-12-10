@@ -1,13 +1,11 @@
-obstacle_range: 0.5
-raytrace_range: 0.5
+obstacle_range: 3.0
+raytrace_range: 3.5
 footprint: [[-0.175, -0.095], [-0.175, 0.095], [0.13, 0.095], [0.13, -0.095]]
 map_topic: /map
-subscribe_to_updates: true
-global_frame: odom
-robot_base_frame: base_link
-update_frequency: 4.0
-publish_frequency: 4.0
-rolling_window: false
+robot_base_frame: base_footprint
+update_frequency: 10.0
+publish_frequency: 5.0
+transform_tolerance: 0.5
 
 plugins:
   - {name: static_layer, type: "costmap_2d::StaticLayer"}
