@@ -1,22 +1,22 @@
 DWAPlannerROS:
 
 # Robot Configuration Parameters - Kobuki
-  max_vel_x: 0.4  # 0.55
-  min_vel_x: -0.4
+  max_vel_x: 0.3  # 0.55
+  min_vel_x: -0.3
 
   max_vel_y: 0.0  # diff drive robot
   min_vel_y: 0.0  # diff drive robot
 
-  max_vel_trans: 0.4 # choose slightly less than the base's capability
-  min_vel_trans: 0.2  # this is the min trans velocity when there is negligible rotational velocity
+  max_vel_trans: 0.25 # choose slightly less than the base's capability
+  min_vel_trans: 0.1  # this is the min trans velocity when there is negligible rotational velocity
   #trans_stopped_vel: 0.1
 
   # Warning!
   #   do not set min_trans_vel to 0.0 otherwise dwa will always think translational velocities
   #   are non-negligible and small in place rotational velocities will be created.
 
-  max_vel_theta: 6.0  # choose slightly less than the base's capability
-  min_vel_theta: 3.0  # this is the min angular velocity when there is negligible translational velocity
+  max_vel_theta: 3.0  # choose slightly less than the base's capability
+  min_vel_theta: 1.6  # this is the min angular velocity when there is negligible translational velocity
   #theta_stopped_vel: 0.4
 
   acc_lim_x: 1.0 # maximum is theoretically 2.0, but we
@@ -24,13 +24,13 @@ DWAPlannerROS:
   acc_lim_y: 0.0      # diff drive robot
 
 # Goal Tolerance Parameters
-  xy_goal_tolerance: 0.15  # 0.10
+  xy_goal_tolerance: 0.2  # 0.10
   yaw_goal_tolerance: 0.3  # 0.05
   latch_xy_goal_tolerance: false
 
 # Forward Simulation Parameters
   sim_time: 1.0       # 1.7
-  vx_samples: 6       # 3
+  vx_samples: 3       # 3
   vy_samples: 1       # diff drive robot, there is only one sample
   vtheta_samples: 20  # 20
 
@@ -44,7 +44,7 @@ DWAPlannerROS:
   max_scaling_factor: 0.2       # 0.2    - how much to scale the robot's footprint when at speed.
 
 # Oscillation Prevention Parameters
-  oscillation_reset_dist: 0.05  # 0.05   - how far to travel before resetting oscillation flags
+  oscillation_reset_dist: 0.1  # 0.05   - how far to travel before resetting oscillation flags
 
 # Debugging
   publish_traj_pc : true

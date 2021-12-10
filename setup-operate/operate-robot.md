@@ -1,7 +1,7 @@
 # Robot Operation / Current Status
 This is intended to be an up-to-date summary of how to run the robot.
 
-December 4, 2021
+December 10, 2021
 ### SLAM Mapping
 
 * Start roscore on raspi4: `roscore`
@@ -23,7 +23,7 @@ December 4, 2021
 * Log on to robot: `ssh ubuntu@robot`
     * Make sure pigpiod is running: `sudo pigpiod`
     * Start nodes on robot: `roslaunch bringup bringup.launch`
-    * Start navigation: `roslaunch robot_nav robot_nav.launch` 
+    * Start navigation: `roslaunch robot_nav navigation.launch` 
 * Start RVIZ with saved config: `rviz -d ~/robot.rviz`
 
 ### Show tf tree

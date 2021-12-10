@@ -51,6 +51,7 @@ MIN_PWM_VAL = int(C)  # Minimum PWM value that motors will turn
 MAX_PWM_VAL = 255  # Maximum allowable PWM value
 MTR_TRIM = 14  # int value to trim R/L motor diff (+ to boost L mtr)
 MIN_X_VEL = 0.1  # minimum x velocity robot can manage (m/s)
+CYCLE_BOOST_MIN = 100  # Threshold for boosting in-place turns
 turning_in_place = False  # Flag signifying robot is turning in place
 new_ttr = False  # Flag signifying target tick rate values are new
 L_ttr = 0  # Left wheel target tick rate
@@ -103,7 +104,7 @@ def convert_cmd_vels_to_target_tick_rates(x, theta):
         R_ttr = R_rate
         new_ttr = True
 
-def set_mtr_spd(pi, latr, ratr, newness=0):
+def set_mtr_spd(pi, latr, ratr, newness=0, cycle=0):
     """
     Derive motor speed and mode from L & R tick rates. Drive motors.
 
@@ -124,6 +125,9 @@ def set_mtr_spd(pi, latr, ratr, newness=0):
     This is intended to give a temporary initial boost to the PWM signal to
     get things rolling. The caller should then gradually decrement the value
     of newness in subsequent calls.
+
+    Another trick to enhance low speed turning is to apply a boosted PWM signal
+    on every other cycle. If (cycle % 2): Boost PWM signal
     """
 
     global new_ttr, L_spd, R_spd, L_mode, R_mode
@@ -170,35 +174,33 @@ def set_mtr_spd(pi, latr, ratr, newness=0):
         pi.write(right_mtr_in1_pin, 0)
         pi.write(right_mtr_in2_pin, 0)
 
-    # Apply R/L MTR_TRIM compensation and send PWM values to the motors
+    # Apply MTR_TRIM, newness and cycle boost compensation
     if (L_mode == 'FWD' and R_mode == 'FWD') or (L_mode == 'REV' and R_mode == 'REV'):
         L_PWM_val = L_spd + MTR_TRIM + newness
-        if L_PWM_val > MAX_PWM_VAL:
-            L_PWM_val = MAX_PWM_VAL
-        elif L_PWM_val < MIN_PWM_VAL:
-            L_PWM_val = 0
-        pi.set_PWM_dutycycle(left_mtr_spd_pin, L_PWM_val)
-
         R_PWM_val = R_spd - MTR_TRIM + newness
-        if R_PWM_val > MAX_PWM_VAL:
-            R_PWM_val = MAX_PWM_VAL
-        elif R_PWM_val < MIN_PWM_VAL:
-            R_PWM_val = 0
-        pi.set_PWM_dutycycle(right_mtr_spd_pin, R_PWM_val)
     else:
         L_PWM_val = L_spd + newness
-        if L_PWM_val > MAX_PWM_VAL:
-            L_PWM_val = MAX_PWM_VAL
-        elif L_PWM_val < MIN_PWM_VAL:
-            L_PWM_val = 0
-        pi.set_PWM_dutycycle(left_mtr_spd_pin, L_PWM_val)
-
         R_PWM_val = R_spd + newness
-        if R_PWM_val > MAX_PWM_VAL:
-            R_PWM_val = MAX_PWM_VAL
-        elif R_PWM_val < MIN_PWM_VAL:
-            R_PWM_val = 0
-        pi.set_PWM_dutycycle(right_mtr_spd_pin, R_PWM_val)
+    if cycle % 2:  # Boost low values every other cycle
+        if L_PWM_val < CYCLE_BOOST_MIN:
+            L_PWM_val *= 2
+        if R_PWM_val < CYCLE_BOOST_MIN:
+            R_PWM_val *= 2
+
+    # Limit PWM values to acceptable range
+    if R_PWM_val > MAX_PWM_VAL:
+        R_PWM_val = MAX_PWM_VAL
+    elif R_PWM_val < MIN_PWM_VAL:
+        R_PWM_val = 0
+
+    if L_PWM_val > MAX_PWM_VAL:
+        L_PWM_val = MAX_PWM_VAL
+    elif L_PWM_val < MIN_PWM_VAL:
+        L_PWM_val = 0
+
+    # Send PWM values to the motors
+    pi.set_PWM_dutycycle(left_mtr_spd_pin, L_PWM_val)
+    pi.set_PWM_dutycycle(right_mtr_spd_pin, R_PWM_val)
 
     # Uncomment these next lines to see the robot's actual driving speed
     '''
@@ -328,12 +330,17 @@ if __name__ == '__main__':
         L_atr = delta_left_pos / delta_time
         R_atr = delta_right_pos / delta_time
 
-        # About to initiate a turn in place?
+        # Initiating a turn in place?
         if new_ttr and turning_in_place:
-            newness = 4
+            newness = 4  # 0 to disable
+            cycle_counter = 1
+        elif turning_in_place:
+            cycle_counter += 1
+        else:
+            cycle_counter = 0
 
         # Set motor speeds
-        set_mtr_spd(pi, L_atr, R_atr, newness)
+        set_mtr_spd(pi, L_atr, R_atr, newness, cycle=cycle_counter)
 
         # Decrement newness toward zero
         if newness:

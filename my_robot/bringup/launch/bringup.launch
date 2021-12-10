@@ -66,6 +66,6 @@
     </node>
 
     <!-- Launch node to automatically turn lidar motor off when not needed -->
-    <!-- <node pkg="rplidar_motor_control" type="rplidar_motor_control" name="rplidar_motor_control" output="screen" /> -->
+    <node pkg="rplidar_motor_control" type="rplidar_motor_control" name="rplidar_motor_control" output="screen" />
 
 </launch>
