@@ -51,14 +51,16 @@ MIN_PWM_VAL = int(C)  # Minimum PWM value that motors will turn
 MAX_PWM_VAL = 255  # Maximum allowable PWM value
 MTR_TRIM = 14  # int value to trim R/L motor diff (+ to boost L mtr)
 MIN_X_VEL = 0.1  # minimum x velocity robot can manage (m/s)
-CYCLE_BOOST_MIN = 100  # Threshold for boosting in-place turns
+TURNING_FACTOR = 0.6  # compensation needed when making in-place turns
+CYCLE_BOOST_THRESHOLD = 80  # spd threshold for cycle-boosting in-place turns
+CYCLE_BOOST = 1.7  # cycle-boost factor to be applied on alternate cycles
 turning_in_place = False  # Flag signifying robot is turning in place
 new_ttr = False  # Flag signifying target tick rate values are new
 L_ttr = 0  # Left wheel target tick rate
 R_ttr = 0  # Right wheel target tick rate
 L_spd = 0  # Left motor speed (pos 8-bit int) for PWM signal
 R_spd = 0  # Right motor speed (pos 8-bit int) for PWM signal
-L_mode = 'OFF'  # motor modes: 'FWD', 'REV', 'OFF'
+L_mode = 'OFF'  # motor mode: 'FWD', 'REV', 'OFF'
 R_mode = 'OFF'
 
 def listener():
@@ -83,7 +85,7 @@ def convert_cmd_vels_to_target_tick_rates(x, theta):
     global L_ttr, R_ttr, new_ttr, turning_in_place
 
     # Set global flag to signify turning in place.
-    if x < MIN_X_VEL * TICKS_PER_METER and theta:
+    if x < MIN_X_VEL and theta:
         turning_in_place = True
     else:
         turning_in_place = False
@@ -115,26 +117,33 @@ def set_mtr_spd(pi, latr, ratr, newness=0, cycle=0):
     owes to the static friction of the motors. If we command a motor speed
     too low, the motors will just whine and not move.
 
-    The problem of commanding the motors to make subtle, small adjustments is
-    especially problematic when making a pure turn without any simultaneous
-    translation in x.
+    For driving FWD or REV, the empirical relationship between the spd signal
+    sent to the motors and the resulting velocity of the robot has been found
+    to roughly follow a parabolic curve with shallow slope at low speed.
 
-    To address this problem, the caller of this function can supply an integer
-    value to the newness parameter. This value is used to temporarily boost
-    the PWM signal sent to the motors, as is needed during "in-place" turns.
-    This is intended to give a temporary initial boost to the PWM signal to
-    get things rolling. The caller should then gradually decrement the value
-    of newness in subsequent calls.
+    However, when the robot is turning slowly in place, the parabolic model
+    is not adequate. In order to get a more accurate relation between the
+    commanded turning speed and the robot's actual speed, an additional term
+    (using TURNING_FACTOR) is used when making low-speed in-place turns.
 
-    Another trick to enhance low speed turning is to apply a boosted PWM signal
-    on every other cycle. If (cycle % 2): Boost PWM signal
+    As an additional remedy, the caller of this function can supply an integer
+    value as the newness parameter. This value is added to the PWM signal sent
+    to the motors, thus giving a temporary initial boost to get things rolling.
+    The caller then decrements the newness value -> zero in subsequent calls.
+
+    Yet another technique to enhance low-speed turning response is to boost the
+    PWM signal by CYCLE_BOOST on every other cycle for in-place turns at speeds
+    less than CYCLE_BOOST_THRESHOLD. 
     """
 
     global new_ttr, L_spd, R_spd, L_mode, R_mode
 
-    # Calculate new estimated spd values when target tick rate changes
+    # Calculate new spd values when target tick rate changes
     if new_ttr:
         L_spd = int(A * pow(L_ttr, 2) + B * abs(L_ttr) + C)
+        R_spd = int(A * pow(R_ttr, 2) + B * abs(R_ttr) + C)
+
+        # Determine L & R modes
         if L_ttr > 0:
             L_mode = 'FWD'
         elif L_ttr < 0:
@@ -142,7 +151,6 @@ def set_mtr_spd(pi, latr, ratr, newness=0, cycle=0):
         else:
             L_mode = 'OFF'
 
-        R_spd = int(A * pow(R_ttr, 2) + B * abs(R_ttr) + C)
         if R_ttr > 0:
             R_mode = 'FWD'
         elif R_ttr < 0:
@@ -150,8 +158,10 @@ def set_mtr_spd(pi, latr, ratr, newness=0, cycle=0):
         else:
             R_mode = 'OFF'
 
+        # Reset flag
         new_ttr = False
-        # rospy.loginfo(f"mtr spd = {(R_spd + L_spd)/2}")
+        
+        rospy.logdebug(f"mtr spd = {(R_spd + L_spd)/2}")
 
     # Set motor direction pins appropriately
     if L_mode == 'FWD':
@@ -174,18 +184,22 @@ def set_mtr_spd(pi, latr, ratr, newness=0, cycle=0):
         pi.write(right_mtr_in1_pin, 0)
         pi.write(right_mtr_in2_pin, 0)
 
-    # Apply MTR_TRIM, newness and cycle boost compensation
+    # Driving FWD or REV? Apply MTR_TRIM and newness compensation
     if (L_mode == 'FWD' and R_mode == 'FWD') or (L_mode == 'REV' and R_mode == 'REV'):
         L_PWM_val = L_spd + MTR_TRIM + newness
         R_PWM_val = R_spd - MTR_TRIM + newness
+
+    # Turning in place? Apply extra juice (determined empirically)
     else:
-        L_PWM_val = L_spd + newness
-        R_PWM_val = R_spd + newness
-    if cycle % 2:  # Boost low values every other cycle
-        if L_PWM_val < CYCLE_BOOST_MIN:
-            L_PWM_val *= 2
-        if R_PWM_val < CYCLE_BOOST_MIN:
-            R_PWM_val *= 2
+        L_PWM_val = L_spd + (L_spd - int(C)) * TURNING_FACTOR + newness
+        R_PWM_val = R_spd + (R_spd - int(C)) * TURNING_FACTOR + newness
+
+    # Apply boost compensation to low values on every other cycle
+    if cycle % 2:
+        if L_PWM_val < CYCLE_BOOST_THRESHOLD:
+            L_PWM_val *= CYCLE_BOOST
+        if R_PWM_val < CYCLE_BOOST_THRESHOLD:
+            R_PWM_val *= CYCLE_BOOST
 
     # Limit PWM values to acceptable range
     if R_PWM_val > MAX_PWM_VAL:
@@ -202,12 +216,25 @@ def set_mtr_spd(pi, latr, ratr, newness=0, cycle=0):
     pi.set_PWM_dutycycle(left_mtr_spd_pin, L_PWM_val)
     pi.set_PWM_dutycycle(right_mtr_spd_pin, R_PWM_val)
 
-    # Uncomment these next lines to see the robot's actual driving speed
-    '''
-    target_speed = ((R_ttr + L_ttr)/2) / TICKS_PER_METER
+    # Show the robot's target speed and actual speed
+    target_speed = ((R_ttr + L_ttr) / 2) / TICKS_PER_METER
     actual_speed = ((R_atr + L_atr) / 2) / TICKS_PER_METER
-    rospy.loginfo(f"Target = {target_speed:.2f}\tActual = {actual_speed:.2f} m/s")
-    '''
+    rospy.logdebug(f"Target = {target_speed:.2f}\tActual = {actual_speed:.2f} m/s")
+
+left_pos = 0
+def left_enc_callback(tick):
+    """Add 1 tick (either +1 or -1)"""
+    
+    global left_pos
+    left_pos += tick
+
+right_pos = 0
+def right_enc_callback(tick):
+    """Add 1 tick (either +1 or -1)"""
+    
+    global right_pos
+    right_pos += tick
+
 
 class Decoder:
    """Class to decode mechanical rotary encoder pulses. """
@@ -240,7 +267,6 @@ class Decoder:
       self.cbB = self.pi.callback(gpioB, pigpio.EITHER_EDGE, self._pulse)
 
    def _pulse(self, gpio, level, tick):
-
       """
       Decode the rotary encoder pulse.
 
@@ -273,7 +299,6 @@ class Decoder:
                self.callback(-1)
 
    def cancel(self):
-
       """
       Cancel the rotary encoder decoder.
       """
@@ -281,19 +306,6 @@ class Decoder:
       self.cbA.cancel()
       self.cbB.cancel()
 
-left_pos = 0
-def left_enc_callback(tick):
-    """Add 1 tick (either +1 or -1)"""
-    
-    global left_pos
-    left_pos += tick
-
-right_pos = 0
-def right_enc_callback(tick):
-    """Add 1 tick (either +1 or -1)"""
-    
-    global right_pos
-    right_pos += tick
 
 if __name__ == '__main__':
 
