@@ -36,13 +36,14 @@ right_enc_A_pin = 23
 right_enc_B_pin = 24
 
 # An 8 bit integer value (0 - 255) is used to command motor speed
-# Approximate relationship between tick_rate (x) and motor spd
-# determined empirically:  spd = A * x^2 + B * x + C
-# Valid at linear speeds up to around 0.25 m/sec
+# Approximate relationship between tick_rate (tr) and motor spd
+# determined empirically:  spd = A * tr^2 + B * tr + C
+# Valid at linear speeds from about 0.09 to about 0.28 m/sec
 A = 2.24e-4
 B = 0.0
 C = 63.1
 
+DEBUG = True
 TICKS_PER_REV = 690
 WHEEL_CIRCUMFERENCE = 0.213  # meters
 TICKS_PER_METER = TICKS_PER_REV / WHEEL_CIRCUMFERENCE
@@ -161,7 +162,8 @@ def set_mtr_spd(pi, latr, ratr, newness=0, cycle=0):
         # Reset flag
         new_ttr = False
         
-        rospy.logdebug(f"mtr spd = {(R_spd + L_spd)/2}")
+        if DEBUG:
+            rospy.loginfo(f"mtr spd = {(R_spd + L_spd)/2}")
 
     # Set motor direction pins appropriately
     if L_mode == 'FWD':
@@ -215,11 +217,6 @@ def set_mtr_spd(pi, latr, ratr, newness=0, cycle=0):
     # Send PWM values to the motors
     pi.set_PWM_dutycycle(left_mtr_spd_pin, L_PWM_val)
     pi.set_PWM_dutycycle(right_mtr_spd_pin, R_PWM_val)
-
-    # Show the robot's target speed and actual speed
-    target_speed = ((R_ttr + L_ttr) / 2) / TICKS_PER_METER
-    actual_speed = ((R_atr + L_atr) / 2) / TICKS_PER_METER
-    rospy.logdebug(f"Target = {target_speed:.2f}\tActual = {actual_speed:.2f} m/s")
 
 left_pos = 0
 def left_enc_callback(tick):
@@ -324,6 +321,8 @@ if __name__ == '__main__':
     # Publish encoder data
     prev_left_pos = 0
     prev_right_pos = 0
+    prev_L_atr = 0
+    prev_R_atr = 0
     newness = 0
     prev_time = rospy.Time.now().to_sec()
     while not rospy.is_shutdown():
@@ -341,6 +340,15 @@ if __name__ == '__main__':
         prev_time = rospy.Time.now().to_sec()
         L_atr = delta_left_pos / delta_time
         R_atr = delta_right_pos / delta_time
+
+        # Show the robot's actual velocities: x and z (theta)
+        if DEBUG:
+            if L_atr != prev_L_atr or R_atr != prev_R_atr:
+                x_vel = ((R_atr + L_atr) / 2) / TICKS_PER_METER  # meters/sec
+                z_vel = ((R_atr - L_atr) / TRACK_WIDTH) / TICKS_PER_METER  # rad/sec
+                rospy.loginfo(f"X Vel = {x_vel:.2f} m/s\tZ Vel = {z_vel:.2f} rad/s")
+                prev_L_atr = L_atr
+                prev_R_atr = R_atr
 
         # Initiating a turn in place?
         if new_ttr and turning_in_place:
