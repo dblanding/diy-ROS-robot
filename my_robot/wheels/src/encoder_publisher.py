@@ -35,26 +35,21 @@ left_enc_B_pin = 8
 right_enc_A_pin = 23
 right_enc_B_pin = 24
 
-# An 8 bit integer value (0 - 255) is used to command motor speed
-# Approximate relationship between tick_rate (tr) and motor spd
-# determined empirically:  spd = A * tr^2 + B * tr + C
-# Valid at linear speeds from about 0.09 to about 0.28 m/sec
-A = 2.24e-4
-B = 0.0
-C = 63.1
-
+# End points of line segments in descending order ((tr, spd), ...)
+TRS_CURVE = ((621, 145), (439, 109), (273, 92), (121, 83))
+TRS_COEFF = None
 DEBUG = True
 TICKS_PER_REV = 690
 WHEEL_CIRCUMFERENCE = 0.213  # meters
 TICKS_PER_METER = TICKS_PER_REV / WHEEL_CIRCUMFERENCE
 TRACK_WIDTH = .187  # Wheel Separation Distance (meters)
-MIN_PWM_VAL = int(C)  # Minimum PWM value that motors will turn
+MIN_PWM_VAL = 63  # Minimum PWM value that motors will turn
 MAX_PWM_VAL = 255  # Maximum allowable PWM value
-MTR_TRIM = 14  # int value to trim R/L motor diff (+ to boost L mtr)
+MTR_TRIM = 0  # int value to trim R/L motor diff (+ to boost L mtr)
 MIN_X_VEL = 0.1  # minimum x velocity robot can manage (m/s)
 TURNING_FACTOR = 0.6  # compensation needed when making in-place turns
-CYCLE_BOOST_THRESHOLD = 80  # spd threshold for cycle-boosting in-place turns
-CYCLE_BOOST = 1.7  # cycle-boost factor to be applied on alternate cycles
+CYCLE_BOOST_THRESHOLD = 60  # spd threshold for cycle-boosting in-place turns
+CYCLE_BOOST = 1.0  # cycle-boost factor to be applied on alternate cycles
 turning_in_place = False  # Flag signifying robot is turning in place
 new_ttr = False  # Flag signifying target tick rate values are new
 L_ttr = 0  # Left wheel target tick rate
@@ -107,9 +102,46 @@ def convert_cmd_vels_to_target_tick_rates(x, theta):
         R_ttr = R_rate
         new_ttr = True
 
+def tr_to_spd(tick_rate):
+    """Convert tick_rate to spd (positive integer). Return spd.
+
+    The relation between tick_rate and mtr_spd has been found empirically to be
+    pretty well approximated by a piecewise linear curve comprised of 3 linear
+    segments. The tick_rate & mtr_spd values of the segment end points are defined
+    in the tuple TRS_CURVE ((tr3, sp3), (tr2, sp2), (tr1, sp1), (tr0, sp0))
+
+    In the present algorithm, the tick rate is examined to see which segment
+    applies to it, starting with the steepest (highest value). The applicable
+    slope and intercept are then used to calculate the value of spd.
+    """
+    global TRS_COEFF
+    tick_rate = abs(tick_rate)
+    if not TRS_COEFF:
+        # This just gets done once. Build a list of coefficients
+        # (tr_lower_limit, m, b) for each segment
+        # m=slope, b=intercept, applicable for tick_rate > tr_lower_limit
+        TRS_COEFF = []
+        tr2 = 0
+        sp2 = 0
+        for tr1, sp1 in TRS_CURVE:
+            if tr2:
+                m = (sp2 - sp1) / (tr2 - tr1)
+                b = sp1 - m * tr1
+                coeffs = (tr1, m, b)
+                TRS_COEFF.append(coeffs)
+            tr2 = tr1
+            sp2 = sp1
+        rospy.loginfo(TRS_COEFF)
+    spd = 0
+    for lower_limit, m, b in TRS_COEFF:
+        if tick_rate > lower_limit:
+            spd = int(m * tick_rate + b)
+            break
+    return spd
+    
 def set_mtr_spd(pi, latr, ratr, newness=0, cycle=0):
     """
-    Derive motor speed and mode from L & R tick rates. Drive motors.
+    Derive motor speed and mode from L & R target tick rates. Drive motors.
 
     Take care when converting from tick rates to motor speed. Tick rates can
     be either positive or negative, wheras motor speed (spd) will always be
@@ -118,31 +150,35 @@ def set_mtr_spd(pi, latr, ratr, newness=0, cycle=0):
     owes to the static friction of the motors. If we command a motor speed
     too low, the motors will just whine and not move.
 
-    For driving FWD or REV, the empirical relationship between the spd signal
-    sent to the motors and the resulting velocity of the robot has been found
-    to roughly follow a parabolic curve with shallow slope at low speed.
+    The empirical relationship between target tick rate and the spd signal
+    sent to the motors has been found to roughly follow a parabolic curve with
+    shallower slope at low speed. This relationship is encapsulated in the
+    helper function tr_to_spd().
 
-    However, when the robot is turning slowly in place, the parabolic model
-    is not adequate. In order to get a more accurate relation between the
-    commanded turning speed and the robot's actual speed, an additional term
-    (using TURNING_FACTOR) is used when making low-speed in-place turns.
+    The problem is at the low end, when a very small PWM signal struggles to
+    get the motor to overcome an inherently unknowable amount of friction.
+    The problem is especially noticeable when making slow, in-place turns.
+    There are a few techniques that can be used to mitigate this problem. 
 
-    As an additional remedy, the caller of this function can supply an integer
-    value as the newness parameter. This value is added to the PWM signal sent
-    to the motors, thus giving a temporary initial boost to get things rolling.
-    The caller then decrements the newness value -> zero in subsequent calls.
+    The caller of this function can supply an integer value as the newness
+    parameter. This value is added to the PWM signal sent to the motors, thus
+    giving a temporary initial boost to get things rolling. The caller then
+    decrements the newness value toward zero in subsequent calls.
 
-    Yet another technique to enhance low-speed turning response is to boost the
-    PWM signal by CYCLE_BOOST on every other cycle for in-place turns at speeds
-    less than CYCLE_BOOST_THRESHOLD. 
+    Another technique to enhance low-speed response is to boost the PWM signal
+    by CYCLE_BOOST on every other cycle for in-place turns at speeds less than
+    CYCLE_BOOST_THRESHOLD.
+
+    Yet another technique would be to use a PID feedback loop to minimize the
+    difference (error) between target and actual tick rate.
     """
 
     global new_ttr, L_spd, R_spd, L_mode, R_mode
 
     # Calculate new spd values when target tick rate changes
     if new_ttr:
-        L_spd = int(A * pow(L_ttr, 2) + B * abs(L_ttr) + C)
-        R_spd = int(A * pow(R_ttr, 2) + B * abs(R_ttr) + C)
+        L_spd = tr_to_spd(L_ttr)
+        R_spd = tr_to_spd(R_ttr)
 
         # Determine L & R modes
         if L_ttr > 0:
@@ -163,7 +199,8 @@ def set_mtr_spd(pi, latr, ratr, newness=0, cycle=0):
         new_ttr = False
         
         if DEBUG:
-            rospy.loginfo(f"mtr spd = {(R_spd + L_spd)/2}")
+            rospy.loginfo(f"mtr spd L: {L_spd}\tR: {R_spd}")
+            rospy.loginfo(f"target tr L: {L_ttr}\tR: {R_ttr}")
 
     # Set motor direction pins appropriately
     if L_mode == 'FWD':
@@ -191,10 +228,10 @@ def set_mtr_spd(pi, latr, ratr, newness=0, cycle=0):
         L_PWM_val = L_spd + MTR_TRIM + newness
         R_PWM_val = R_spd - MTR_TRIM + newness
 
-    # Turning in place? Apply extra juice (determined empirically)
+    # Turning in place?
     else:
-        L_PWM_val = L_spd + (L_spd - int(C)) * TURNING_FACTOR + newness
-        R_PWM_val = R_spd + (R_spd - int(C)) * TURNING_FACTOR + newness
+        L_PWM_val = L_spd + newness
+        R_PWM_val = R_spd + newness
 
     # Apply boost compensation to low values on every other cycle
     if cycle % 2:
@@ -352,7 +389,7 @@ if __name__ == '__main__':
 
         # Initiating a turn in place?
         if new_ttr and turning_in_place:
-            newness = 4  # 0 to disable
+            newness = 12  # 0 to disable
             cycle_counter = 1
         elif turning_in_place:
             cycle_counter += 1
