@@ -45,11 +45,7 @@ TICKS_PER_METER = TICKS_PER_REV / WHEEL_CIRCUMFERENCE
 TRACK_WIDTH = .187  # Wheel Separation Distance (meters)
 MIN_PWM_VAL = 63  # Minimum PWM value that motors will turn
 MAX_PWM_VAL = 255  # Maximum allowable PWM value
-MTR_TRIM = 0  # int value to trim R/L motor diff (+ to boost L mtr)
 MIN_X_VEL = 0.1  # minimum x velocity robot can manage (m/s)
-TURNING_FACTOR = 0.6  # compensation needed when making in-place turns
-CYCLE_BOOST_THRESHOLD = 60  # spd threshold for cycle-boosting in-place turns
-CYCLE_BOOST = 1.0  # cycle-boost factor to be applied on alternate cycles
 turning_in_place = False  # Flag signifying robot is turning in place
 new_ttr = False  # Flag signifying target tick rate values are new
 L_ttr = 0  # Left wheel target tick rate
@@ -58,6 +54,13 @@ L_spd = 0  # Left motor speed (pos 8-bit int) for PWM signal
 R_spd = 0  # Right motor speed (pos 8-bit int) for PWM signal
 L_mode = 'OFF'  # motor mode: 'FWD', 'REV', 'OFF'
 R_mode = 'OFF'
+
+# PID stuff
+KP = 0.5  # Proportional coeff
+KD = 0.1  # Derivative coeff
+L_prev_err = 0
+R_prev_err = 0
+MAX_PID_TRIM = 20  # Max allowable value for PID trim term
 
 def listener():
     """Listen to cmd_vel topic. Send Twist msg to callback. """
@@ -131,7 +134,7 @@ def tr_to_spd(tick_rate):
                 TRS_COEFF.append(coeffs)
             tr2 = tr1
             sp2 = sp1
-        rospy.loginfo(TRS_COEFF)
+        #rospy.loginfo(TRS_COEFF)
     spd = 0
     for lower_limit, m, b in TRS_COEFF:
         if tick_rate > lower_limit:
@@ -139,7 +142,7 @@ def tr_to_spd(tick_rate):
             break
     return spd
     
-def set_mtr_spd(pi, latr, ratr, newness=0, cycle=0):
+def set_mtr_spd(pi, latr, ratr):
     """
     Derive motor speed and mode from L & R target tick rates. Drive motors.
 
@@ -158,22 +161,11 @@ def set_mtr_spd(pi, latr, ratr, newness=0, cycle=0):
     The problem is at the low end, when a very small PWM signal struggles to
     get the motor to overcome an inherently unknowable amount of friction.
     The problem is especially noticeable when making slow, in-place turns.
-    There are a few techniques that can be used to mitigate this problem. 
-
-    The caller of this function can supply an integer value as the newness
-    parameter. This value is added to the PWM signal sent to the motors, thus
-    giving a temporary initial boost to get things rolling. The caller then
-    decrements the newness value toward zero in subsequent calls.
-
-    Another technique to enhance low-speed response is to boost the PWM signal
-    by CYCLE_BOOST on every other cycle for in-place turns at speeds less than
-    CYCLE_BOOST_THRESHOLD.
-
-    Yet another technique would be to use a PID feedback loop to minimize the
-    difference (error) between target and actual tick rate.
+    A PID feedback loop is used to minimize the difference (error) between
+    target and actual tick rate.
     """
 
-    global new_ttr, L_spd, R_spd, L_mode, R_mode
+    global new_ttr, L_spd, R_spd, L_mode, R_mode, L_prev_err, R_prev_err
 
     # Calculate new spd values when target tick rate changes
     if new_ttr:
@@ -197,10 +189,14 @@ def set_mtr_spd(pi, latr, ratr, newness=0, cycle=0):
 
         # Reset flag
         new_ttr = False
-        
+        '''
         if DEBUG:
-            rospy.loginfo(f"mtr spd L: {L_spd}\tR: {R_spd}")
-            rospy.loginfo(f"target tr L: {L_ttr}\tR: {R_ttr}")
+            spd_msg = f"mtr spd L: {L_spd}\tR: {R_spd}"
+            ttr_msg = f"target tr L: {L_ttr}\tR: {R_ttr}"
+            atr_msg = f"actual tr L: {latr}\tR: {ratr}"
+            logmsg = spd_msg + ttr_msg + atr_msg
+            rospy.loginfo(logmsg)
+        '''
 
     # Set motor direction pins appropriately
     if L_mode == 'FWD':
@@ -223,22 +219,41 @@ def set_mtr_spd(pi, latr, ratr, newness=0, cycle=0):
         pi.write(right_mtr_in1_pin, 0)
         pi.write(right_mtr_in2_pin, 0)
 
-    # Driving FWD or REV? Apply MTR_TRIM and newness compensation
-    if (L_mode == 'FWD' and R_mode == 'FWD') or (L_mode == 'REV' and R_mode == 'REV'):
-        L_PWM_val = L_spd + MTR_TRIM + newness
-        R_PWM_val = R_spd - MTR_TRIM + newness
+    # Find tick rate error
+    L_err = abs(L_ttr) - abs(latr)
+    R_err = abs(R_ttr) - abs(ratr)
 
-    # Turning in place?
-    else:
-        L_PWM_val = L_spd + newness
-        R_PWM_val = R_spd + newness
+    # Calculate proportional term
+    L_pro = int(L_err * KP)
+    R_pro = int(R_err * KP)
 
-    # Apply boost compensation to low values on every other cycle
-    if cycle % 2:
-        if L_PWM_val < CYCLE_BOOST_THRESHOLD:
-            L_PWM_val *= CYCLE_BOOST
-        if R_PWM_val < CYCLE_BOOST_THRESHOLD:
-            R_PWM_val *= CYCLE_BOOST
+    # Calculate derivative term
+    L_der = int((L_err - L_prev_err) * KD)
+    R_der = int((R_err - R_prev_err) * KD)
+    L_prev_err = L_err
+    R_prev_err = R_err
+
+    # Combine terms and apply max limit
+    L_pid_trim = L_pro + L_der
+    R_pid_trim = R_pro + R_der
+    '''
+    # Show PID terms
+    if DEBUG and L_pid_trim and R_pid_trim:
+        rospy.loginfo(f"Left: P: {L_pro}, D: {L_der} Right: P: {R_pro}, D: {R_der}")
+    '''
+    # Limit value of PID trim
+    if L_pid_trim > MAX_PID_TRIM:
+        L_pid_trim = MAX_PID_TRIM
+    elif L_pid_trim < -MAX_PID_TRIM:
+        L_pid_trim = -MAX_PID_TRIM
+    if R_pid_trim > MAX_PID_TRIM:
+        R_pid_trim = MAX_PID_TRIM
+    elif R_pid_trim < -MAX_PID_TRIM:
+        R_pid_trim = -MAX_PID_TRIM
+
+    # Add PID feedback to minimize error 
+    L_PWM_val = L_spd + L_pid_trim
+    R_PWM_val = R_spd + R_pid_trim
 
     # Limit PWM values to acceptable range
     if R_PWM_val > MAX_PWM_VAL:
@@ -387,21 +402,8 @@ if __name__ == '__main__':
                 prev_L_atr = L_atr
                 prev_R_atr = R_atr
 
-        # Initiating a turn in place?
-        if new_ttr and turning_in_place:
-            newness = 12  # 0 to disable
-            cycle_counter = 1
-        elif turning_in_place:
-            cycle_counter += 1
-        else:
-            cycle_counter = 0
-
         # Set motor speeds
-        set_mtr_spd(pi, L_atr, R_atr, newness, cycle=cycle_counter)
-
-        # Decrement newness toward zero
-        if newness:
-            newness -= 1
+        set_mtr_spd(pi, L_atr, R_atr)
 
         rate.sleep()
 
