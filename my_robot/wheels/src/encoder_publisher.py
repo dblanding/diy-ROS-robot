@@ -7,6 +7,7 @@ Subscribe to topic:
 Publish on topics:
     /right_ticks
     /left_ticks
+    /act_vel
 
 Decoder class adapted from rotary_encoder example at:
 https://abyz.me.uk/rpi/pigpio/examples.html
@@ -38,7 +39,7 @@ right_enc_B_pin = 24
 # End points of line segments in descending order ((tr, spd), ...)
 TRS_CURVE = ((621, 145), (439, 109), (273, 92), (121, 83))
 TRS_COEFF = None
-DEBUG = True
+
 TICKS_PER_REV = 690
 WHEEL_CIRCUMFERENCE = 0.213  # meters
 TICKS_PER_METER = TICKS_PER_REV / WHEEL_CIRCUMFERENCE
@@ -108,9 +109,11 @@ def convert_cmd_vels_to_target_tick_rates(x, theta):
 def tr_to_spd(tick_rate):
     """Convert tick_rate to spd (positive integer). Return spd.
 
-    The relation between tick_rate and mtr_spd has been found empirically to be
-    pretty well approximated by a piecewise linear curve comprised of 3 linear
-    segments. The tick_rate & mtr_spd values of the segment end points are defined
+    The empirical relationship between target tick rate and the spd signal
+    sent to the motors has been found to roughly follow a parabolic curve
+    with shallower slope at low speed. This relationship is pretty closely
+    approximated by a piecewise linear curve comprised of 3 linear segments.
+    The tick_rate & mtr_spd values of the segment end points are defined
     in the tuple TRS_CURVE ((tr3, sp3), (tr2, sp2), (tr1, sp1), (tr0, sp0))
 
     In the present algorithm, the tick rate is examined to see which segment
@@ -119,10 +122,11 @@ def tr_to_spd(tick_rate):
     """
     global TRS_COEFF
     tick_rate = abs(tick_rate)
+
+    # This just gets done once.
     if not TRS_COEFF:
-        # This just gets done once. Build a list of coefficients
-        # (tr_lower_limit, m, b) for each segment
-        # m=slope, b=intercept, applicable for tick_rate > tr_lower_limit
+        # Build list of coefficients (lower_limit, m, b) for each segment
+        # m=slope, b=intercept, applicable for tick_rate > lower_limit
         TRS_COEFF = []
         tr2 = 0
         sp2 = 0
@@ -134,7 +138,8 @@ def tr_to_spd(tick_rate):
                 TRS_COEFF.append(coeffs)
             tr2 = tr1
             sp2 = sp1
-        #rospy.loginfo(TRS_COEFF)
+
+    # This happens every time
     spd = 0
     for lower_limit, m, b in TRS_COEFF:
         if tick_rate > lower_limit:
@@ -146,23 +151,20 @@ def set_mtr_spd(pi, latr, ratr):
     """
     Derive motor speed and mode from L & R target tick rates. Drive motors.
 
-    Take care when converting from tick rates to motor speed. Tick rates can
-    be either positive or negative, wheras motor speed (spd) will always be
-    a non-negative 8-bit int (0-255). Therefore, we will also need to specify
-    a mode for the motors: FWD, REV, or OFF. One reason for the "OFF" mode
-    owes to the static friction of the motors. If we command a motor speed
-    too low, the motors will just whine and not move.
+    Target tick rates are converted to "best guess" PWM values to drive the
+    motors using an empirical curve.
+    
+    Tick rates can be either positive or negative, wheras motor speed (spd)
+    will always be a positive 8-bit int (0-255). Therefore, it is needed to
+    specify a mode for the motors: FWD, REV, or OFF.
 
-    The empirical relationship between target tick rate and the spd signal
-    sent to the motors has been found to roughly follow a parabolic curve with
-    shallower slope at low speed. This relationship is encapsulated in the
-    helper function tr_to_spd().
+    At low speeds, a very small PWM signal struggles to get the motor to
+    overcome an inherently unknowable amount of friction. This makes it very
+    difficult for the robot to accurately follow the command velocity.
 
-    The problem is at the low end, when a very small PWM signal struggles to
-    get the motor to overcome an inherently unknowable amount of friction.
-    The problem is especially noticeable when making slow, in-place turns.
-    A PID feedback loop is used to minimize the difference (error) between
-    target and actual tick rate.
+    To improve the robot's ability to accurately follow the command velocity,
+    (especially noticeable when making slow, in-place turns) PID feedback is
+    used to minimize the difference between target and actual tick rate (error).
     """
 
     global new_ttr, L_spd, R_spd, L_mode, R_mode, L_prev_err, R_prev_err
@@ -189,14 +191,6 @@ def set_mtr_spd(pi, latr, ratr):
 
         # Reset flag
         new_ttr = False
-        '''
-        if DEBUG:
-            spd_msg = f"mtr spd L: {L_spd}\tR: {R_spd}"
-            ttr_msg = f"target tr L: {L_ttr}\tR: {R_ttr}"
-            atr_msg = f"actual tr L: {latr}\tR: {ratr}"
-            logmsg = spd_msg + ttr_msg + atr_msg
-            rospy.loginfo(logmsg)
-        '''
 
     # Set motor direction pins appropriately
     if L_mode == 'FWD':
@@ -236,11 +230,7 @@ def set_mtr_spd(pi, latr, ratr):
     # Combine terms and apply max limit
     L_pid_trim = L_pro + L_der
     R_pid_trim = R_pro + R_der
-    '''
-    # Show PID terms
-    if DEBUG and L_pid_trim and R_pid_trim:
-        rospy.loginfo(f"Left: P: {L_pro}, D: {L_der} Right: P: {R_pro}, D: {R_der}")
-    '''
+
     # Limit value of PID trim
     if L_pid_trim > MAX_PID_TRIM:
         L_pid_trim = MAX_PID_TRIM
@@ -370,6 +360,10 @@ if __name__ == '__main__':
     rospy.init_node('wheels', anonymous=True)
     rate = rospy.Rate(10)
 
+    # Set up to publish actual velocity
+    actual_vel = Twist()
+    robot_vel = rospy.Publisher('act_vel', Twist, queue_size=10)
+
     # Publish encoder data
     prev_left_pos = 0
     prev_right_pos = 0
@@ -393,14 +387,16 @@ if __name__ == '__main__':
         L_atr = delta_left_pos / delta_time
         R_atr = delta_right_pos / delta_time
 
-        # Show the robot's actual velocities: x and z (theta)
-        if DEBUG:
-            if L_atr != prev_L_atr or R_atr != prev_R_atr:
-                x_vel = ((R_atr + L_atr) / 2) / TICKS_PER_METER  # meters/sec
-                z_vel = ((R_atr - L_atr) / TRACK_WIDTH) / TICKS_PER_METER  # rad/sec
-                rospy.loginfo(f"X Vel = {x_vel:.2f} m/s\tZ Vel = {z_vel:.2f} rad/s")
-                prev_L_atr = L_atr
-                prev_R_atr = R_atr
+        # Calculate robot actual velocity
+        x_vel = ((R_atr + L_atr) / 2) / TICKS_PER_METER  # meters/sec
+        z_vel = ((R_atr - L_atr) / TRACK_WIDTH) / TICKS_PER_METER  # rad/sec
+        prev_L_atr = L_atr
+        prev_R_atr = R_atr
+
+        # Publish robot actual velocity
+        actual_vel.linear.x = x_vel
+        actual_vel.angular.z = z_vel
+        robot_vel.publish(actual_vel)
 
         # Set motor speeds
         set_mtr_spd(pi, L_atr, R_atr)
