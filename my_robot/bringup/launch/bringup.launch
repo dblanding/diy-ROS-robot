@@ -1,6 +1,10 @@
 <?xml version="1.0"?> 
 <launch>
 
+    <!-- Publish robot parameters -->
+    <node name="robot_params" pkg="robot_params" type="publish_params.py" output="screen">
+    </node>
+
     <!-- Launch wheel encoder tick publisher node -->
     <node name="mtr_encdr" pkg="wheels" type="encoder_publisher.py" output="screen">
     </node>

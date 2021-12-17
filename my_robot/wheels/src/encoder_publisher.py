@@ -36,17 +36,16 @@ left_enc_B_pin = 8
 right_enc_A_pin = 23
 right_enc_B_pin = 24
 
-# End points of line segments in descending order ((tr, spd), ...)
-TRS_CURVE = ((621, 145), (439, 109), (273, 92), (121, 83))
+TRS_CURVE = rospy.get_param('ROBOT_TRS_CURVE')
 TRS_COEFF = None
 
-TICKS_PER_REV = 690
-WHEEL_CIRCUMFERENCE = 0.213  # meters
-TICKS_PER_METER = TICKS_PER_REV / WHEEL_CIRCUMFERENCE
-TRACK_WIDTH = .187  # Wheel Separation Distance (meters)
-MIN_PWM_VAL = 63  # Minimum PWM value that motors will turn
-MAX_PWM_VAL = 255  # Maximum allowable PWM value
-MIN_X_VEL = 0.1  # minimum x velocity robot can manage (m/s)
+TICKS_PER_REV = rospy.get_param('ROBOT_TICKS_PER_REV')
+TICKS_PER_METER = rospy.get_param('ROBOT_TICKS_PER_METER')
+TRACK_WIDTH = rospy.get_param('ROBOT_TRACK_WIDTH')
+MIN_PWM_VAL = rospy.get_param('ROBOT_MIN_PWM_VAL')
+MAX_PWM_VAL = rospy.get_param('ROBOT_MAX_PWM_VAL')
+MIN_X_VEL = rospy.get_param('ROBOT_MIN_X_VEL')
+
 turning_in_place = False  # Flag signifying robot is turning in place
 new_ttr = False  # Flag signifying target tick rate values are new
 L_ttr = 0  # Left wheel target tick rate
@@ -57,11 +56,11 @@ L_mode = 'OFF'  # motor mode: 'FWD', 'REV', 'OFF'
 R_mode = 'OFF'
 
 # PID stuff
-KP = 0.5  # Proportional coeff
-KD = 0.1  # Derivative coeff
+KP = rospy.get_param('ROBOT_MTR_KP')
+KD = rospy.get_param('ROBOT_MTR_KD')
 L_prev_err = 0
 R_prev_err = 0
-MAX_PID_TRIM = 20  # Max allowable value for PID trim term
+MAX_PID_TRIM = rospy.get_param('ROBOT_MTR_MAX_PID_TRIM')
 
 def listener():
     """Listen to cmd_vel topic. Send Twist msg to callback. """

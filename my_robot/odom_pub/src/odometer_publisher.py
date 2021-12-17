@@ -22,8 +22,8 @@ from std_msgs.msg import Int32, Float32
 
 rospy.init_node('odometry_publisher', anonymous=True)
 
-TICKS_PER_METER = 1880  # Number of encoder ticks per meter of travel
-TRACK_WIDTH = .163  # Wheel Separation Distance (meters)
+TICKS_PER_METER = rospy.get_param('ROBOT_TICKS_PER_METER')
+TRACK_WIDTH = rospy.get_param('ROBOT_TRACK_WIDTH')
 
 # Listen for encoder data
 left_ticks = 0
