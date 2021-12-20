@@ -1,7 +1,7 @@
 # Robot Operation / Current Status
 This is intended to be an up-to-date summary of how to run the robot.
 
-December 10, 2021
+December 20, 2021
 ### SLAM Mapping
 
 * Start roscore on raspi4: `roscore`
@@ -24,6 +24,19 @@ December 10, 2021
     * Make sure pigpiod is running: `sudo pigpiod`
     * Start nodes on robot: `roslaunch bringup bringup.launch`
     * Start navigation: `roslaunch robot_nav navigation.launch` 
+* Start RVIZ with saved config: `rviz -d ~/robot.rviz`
+
+### Test Drive
+Test drive pkg (installed on Raspi4) enables driving directly to a goal specified in RVIZ, but without regard for obstacles.
+
+* Start roscore on raspi4: `roscore`
+
+* Log on to robot: `ssh ubuntu@robot`
+    * Make sure pigpiod is running: `sudo pigpiod`
+    * Start nodes on robot: `roslaunch bringup bringup.launch`
+    * Start map node on robot: `roslaunch robot_nav map.launch`
+
+* Start test drive: `roslaunch test_drive test_drive.launch` 
 * Start RVIZ with saved config: `rviz -d ~/robot.rviz`
 
 ### Show tf tree

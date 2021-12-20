@@ -4,7 +4,7 @@
   <!-- odom to base_footprint transform provided by the robot_pose_ekf node -->
   <!-- map to odom provided here. Needed by AMCL node -->
 
-  <node pkg="tf" type="static_transform_publisher" name="tf_map_to_odom" args="0 0 0 0 0 0 1 map odom" />
+  <node pkg="tf2_ros" type="static_transform_publisher" name="tf_map_to_odom" args="0 0 0 0 0 0 1 map odom" />
 
   <!-- Map File -->
   <arg name="map_file" default="$(find robot_nav)/maps/officemap.yaml"/>

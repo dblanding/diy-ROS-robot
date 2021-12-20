@@ -1,0 +1,8 @@
+<launch>
+
+    <!-- launch test_drive node -->
+    <!-- Publish: /cmd_vel -->
+    <node name="test_drive" pkg="test_drive" type="simple_drive_controller.py" output="screen">
+    </node>
+	
+</launch>

@@ -10,7 +10,7 @@ See doc at http://wiki.ros.org/rospy/Overview/Parameter%20Server
 import rospy
 
 # Robot parameter values
-ROBOT_TICKS_PER_REV = 690
+ROBOT_TICKS_PER_REV = 686.4  # 24:1 worm, 26:10 spur, 11 pole encoder magnet
 ROBOT_WHEEL_CIRCUMFERENCE = 0.213  # meters
 ROBOT_TICKS_PER_METER = int(ROBOT_TICKS_PER_REV / ROBOT_WHEEL_CIRCUMFERENCE)
 ROBOT_TRACK_WIDTH = .187  # Wheel Separation Distance (meters)
@@ -26,7 +26,7 @@ ROBOT_MTR_MAX_PID_TRIM = 20  # Max allowable value for PID trim term
 
 # end points of segments of piecewise linear curve in descending order
 # where curve relates tick rate (tr) to motor speed (s)
-ROBOT_TRS_CURVE = ((621, 145), (439, 109), (273, 92), (121, 83))
+ROBOT_TRS_CURVE = ((621, 145), (439, 109), (273, 92), (87, 81))
 
 
 param_dict = {

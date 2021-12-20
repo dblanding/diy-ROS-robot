@@ -1,0 +1,13 @@
+<launch>
+
+  <!-- Transformation Configuration ... Setting Up the Relationships Between Coordinate Frames --> 
+  <node pkg="tf2_ros" type="static_transform_publisher" name="map_to_odom" args="0 0 0 0 0 0 1 map odom" />
+
+  <!-- Map File -->
+  <arg name="map_file" default="$(find robot_nav)/maps/officemap.yaml"/>
+	
+  <!-- Map Server -->
+  <!-- Publish: /map, /map_metadata -->
+  <node pkg="map_server" name="map_server" type="map_server" args="$(arg map_file)" />
+	
+</launch>
