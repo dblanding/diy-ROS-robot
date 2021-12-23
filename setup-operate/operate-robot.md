@@ -1,7 +1,7 @@
 # Robot Operation / Current Status
 This is intended to be an up-to-date summary of how to run the robot.
 
-December 20, 2021
+December 23, 2021
 ### SLAM Mapping
 
 * Start roscore on raspi4: `roscore`

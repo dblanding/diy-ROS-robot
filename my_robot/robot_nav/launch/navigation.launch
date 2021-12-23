@@ -1,6 +1,6 @@
 <launch>
 
-  <!-- Transformation Configuration ... Setting Up the Relationships Between Coordinate Frames --> 
+  <!-- Transformation Configuration ... Setting Up the Relationships Between Coordinate Frames -->
   <!-- odom to base_footprint transform provided by the robot_pose_ekf node -->
   <!-- map to odom provided here. Needed by AMCL node -->
 

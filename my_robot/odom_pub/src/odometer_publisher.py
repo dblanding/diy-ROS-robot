@@ -15,9 +15,11 @@ a python version of http://wiki.ros.org/navigation/Tutorials/RobotSetup/Odom
 from math import asin, sin, cos, pi
 
 import rospy
-import tf
+import tf2_ros
+from tf.transformations import quaternion_from_euler
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
+from geometry_msgs.msg import TransformStamped
 from std_msgs.msg import Int32, Float32
 
 rospy.init_node('odometry_publisher', anonymous=True)
@@ -54,7 +56,7 @@ prev_right_ticks = 0
 last_time = rospy.Time.now()
 
 odom_pub = rospy.Publisher("odom", Odometry, queue_size=50)
-odom_broadcaster = tf.TransformBroadcaster()
+odom_broadcaster = tf2_ros.TransformBroadcaster()
 
 # Start listening
 left_tick_listener()
@@ -96,17 +98,27 @@ while not rospy.is_shutdown():
     vy = delta_y / dt
     vth = delta_th / dt
 
-    # since all odometry is 6DOF we'll need a quaternion created from yaw
-    odom_quat = tf.transformations.quaternion_from_euler(0, 0, th)
+    # All odometry is 6DOF so we'll need a quaternion created from yaw
+    odom_quat = quaternion_from_euler(0, 0, th)
+
+    # Silence transform broadcast if robot_pose_ekf will do it
     '''
-    # first, we'll publish the transform over tf
-    odom_broadcaster.sendTransform(
-        (x, y, 0.),
-        odom_quat,
-        current_time,
-        "base_footprint",
-        "odom"
-    )
+    # first, we'll broadcast the transform using tf2_ros
+    t = TransformStamped()
+
+    t.header.stamp = current_time
+    t.header.frame_id = "odom"
+    t.child_frame_id = "base_link"
+    t.transform.translation.x = x
+    t.transform.translation.y = y
+    t.transform.translation.z = 0.0
+    q = odom_quat
+    t.transform.rotation.x = q[0]
+    t.transform.rotation.y = q[1]
+    t.transform.rotation.z = q[2]
+    t.transform.rotation.w = q[3]
+
+    odom_broadcaster.sendTransform(t)
     '''
     # next, we'll publish the odometry message over ROS
     odom = Odometry()

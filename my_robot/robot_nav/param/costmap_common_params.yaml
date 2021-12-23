@@ -2,7 +2,7 @@ obstacle_range: 3.0
 raytrace_range: 3.5
 footprint: [[-0.175, -0.095], [-0.175, 0.095], [0.13, 0.095], [0.13, -0.095]]
 map_topic: /map
-robot_base_frame: base_footprint
+robot_base_frame: base_link
 update_frequency: 10.0
 publish_frequency: 10.0
 transform_tolerance: 0.3
