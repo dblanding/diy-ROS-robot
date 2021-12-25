@@ -1,7 +1,7 @@
 # Robot Operation / Current Status
 This is intended to be an up-to-date summary of how to run the robot.
 
-December 23, 2021
+December 25, 2021
 ### SLAM Mapping
 
 * Start roscore on raspi4: `roscore`
@@ -39,8 +39,15 @@ Test drive pkg (installed on Raspi4) enables driving directly to a goal specifie
 * Start test drive: `roslaunch test_drive test_drive.launch` 
 * Start RVIZ with saved config: `rviz -d ~/robot.rviz`
 
+### Check to make sure actual velocity of robot matches command velocity
+* With robot already running (bringup launched)
+* `rosrun rqt_robot_steering rqt_robot_steering`
+* `rqt_plot`
+
+![RQT Plot](figures/rqt_plot.png)
+
 ### Show tf tree
-* The tf tree shows the topological relationship of the various coordinate frames of reference that are used in the robot.
+* The tf tree shows the topological relationship of all the coordinate frames
 
 * To show tf tree: `rosrun rqt_tf_tree rqt_tf_tree`
 
