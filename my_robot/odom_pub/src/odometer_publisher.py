@@ -5,6 +5,7 @@ ROS Odometry node
 Subscribes to topics:
     /rigt_ticks
     /left_ticks
+    /act_vel
 
 Publishes on topic /odom and broadcasts tf data
 
@@ -30,6 +31,8 @@ TRACK_WIDTH = rospy.get_param('ROBOT_TRACK_WIDTH')
 # Listen for encoder data
 left_ticks = 0
 right_ticks = 0
+vx = 0  # meters/sec
+vth = 0  # radians/sec
 
 def left_tick_callback(msg):
     global left_ticks
@@ -44,6 +47,16 @@ def left_tick_listener():
 
 def right_tick_listener():
     rospy.Subscriber("/right_ticks", Int32, right_tick_callback)
+
+def act_vel_callback(msg):
+    """Extract linear.x and angular.z from Twist msg."""
+    global vx, vth
+    vx = msg.linear.x
+    vth = msg.angular.z
+
+def act_vel_listener():
+    rospy.Subscriber("/act_vel", Twist, act_vel_callback)
+
 
 # Initial values for robot pose
 x = 0.0  # x position
@@ -93,11 +106,6 @@ while not rospy.is_shutdown():
     delta_th = cycle_angle
     th += delta_th
     
-    # Calculate the velocities
-    vx = delta_x / dt
-    vy = delta_y / dt
-    vth = delta_th / dt
-
     # All odometry is 6DOF so we'll need a quaternion created from yaw
     odom_quat = quaternion_from_euler(0, 0, th)
 
@@ -136,9 +144,12 @@ while not rospy.is_shutdown():
                             0.0, 0.0, 0.0, 0.0, 0.01, 0.0,
                             0.0, 0.0, 0.0, 0.0, 0.0, 0.01]
 
-    # set the velocity
+    # set the velocity w/r/t the child_frame
     odom.child_frame_id = "base_link"
-    odom.twist.twist = Twist(Vector3(vx, vy, 0), Vector3(0, 0, vth))
+    # odom.twist.twist = Twist(Vector3(vx, 0, 0), Vector3(0, 0, vth))
+    odom.twist.twist.linear.x = vx
+    odom.twist.twist.linear.y = 0.0
+    odom.twist.twist.angular.z = vth
 
     # set the values of covariance on the diagonal
     odom.twist.covariance = [0.01, 0.0, 0.0, 0.0, 0.0, 0.0,
