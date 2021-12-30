@@ -21,10 +21,6 @@ The most complicated part I had to make was the 1/4 x 5 x 12 inch long piece of 
 
 ![Elegoo Tumbller Self-Balancing Robot Car](images/elegoo-tumbller.jpg)
 
-Along the way, I decided to use motors with a higher gear reduction, so I just had to make a pair of new motor brackets. Here is the robot in its most recent configuration.
-
-![latest robot](images/latest-robot.jpg)
-
 ### Configuring ROS on board the robot
 The `my_robot` folder contains all the code that goes in robot's catkin_ws/src directory.
 
@@ -44,7 +40,22 @@ To operate the robot, refer to these [operating instructions](setup-operate/oper
 [Here](setup-operate/ubuntu-install.md) are the details of the setup and configuration of the raspi4 computer.
 
 ### DIY robot makes its maiden voyage
-On 11/27/21, the DIY robot made its first trip under the control of the ROS Navigation Stack. It wasn't a very smooth or efficient looking route but the robot managed to complete its first trip to a goal pose specified in RVIZ.
+On 11/27/21, the DIY robot made its first trip under the control of the ROS Navigation Stack. It wasn't a very smooth or efficient looking route (and the navigation stack was producing lots of warnings and errors) but the robot managed to complete its first trip to a goal pose specified in RVIZ.
 
 ![First excursion using RVIZ](videos/IMG_2534.mp4)
+
+Being a novice, it wasn't obvious to me what was causing all these warnings and errors. So I decided on a "divide and conquer" approach. I decided to make my robot behave similarly to the Turtlebot3 Burger. That way I could just copy the navigation parameters from the Burger and hopefully the navigation performance would be fine. And if not, then maybe the problem is elsewhere.
+
+Compared to the Burger, my robot was going kind of fast, so I switched to motors with a higher gear reduction. I estimated that I would need 100 RPM motors to get the robot speed down around 0.25 m/s. Unfortunately, the gearbox configuration on the motors I found was different than the current motors, so I had to make new motor brackets. Here is the robot in the new configuration.
+
+![latest robot](images/latest-robot.jpg)
+
+As it turns out, this was a good approach.
+* Even after studying the [DWA local planner documentatioin](http://wiki.ros.org/dwa_local_planner), it's actually pretty frustrating to get all the parameters in the DWA_planner optimized, so being able to just copy the parameters from Burger is very helpful.
+* I discovered that I had botched the Twist part of the message being published in the /odom topic. As it turns out, the velocities are supposed to be referred to the child frame (base_link), not the odom frame.
+
+### 12/30/2021 DIY Robot Project initial goal has been achieved.
+* Issues producing warnings and errors have been resolved.
+* Parameters have been set to optimize the robot's driving performance under navigation stack control.
+* Robot now navigates smoothly and efficiently to goal pose specified in RVIZ.
 
