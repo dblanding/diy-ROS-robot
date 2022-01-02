@@ -58,12 +58,14 @@ Compared to the Burger, my robot was going kind of fast, so I switched to motors
 ![latest robot](images/latest-robot.jpg)
 
 As it turns out, this was a good approach.
-* Even after studying the [DWA local planner documentation](http://wiki.ros.org/dwa_local_planner), it's actually pretty frustrating to get all the parameters in the DWA_planner optimized, so being able to just copy the parameters from Burger is very helpful.
-* I also discovered that I had botched the Twist part of the message being published in the /odom topic. As it turns out, the velocities are supposed to be referred to the child frame (base_link), not the odom frame.
+* Even after studying the [DWA local planner documentation](http://wiki.ros.org/dwa_local_planner), it's actually pretty frustrating to get all the parameters in the DWA_planner optimized, so being able to just copy the parameters from Burger was very helpful. I could be confident that any remaining problems with the robot's behavior while operating under the control of the navigation stack were most likely being caused by something in my code.
+* This led me to discover that the Twist part of the message being published in the /odom topic was referring to the wrong frame. Here I present a [summary of this and other issues](docs/sticky-spots.md) I encountered along the way and how they were resolved.
 
 ### 12/30/2021 DIY Robot Project complete.
-* Resolved issues reulting in all the warnings and errors.
-* Parameters have been set to optimize the robot's driving performance under navigation stack control.
-* I achieved my initial goal of learning to build a simple DIY Robot. A [summary of that learning](docs/learning-ROS.md). Another [summary of issues & resolutions](docs/sticky-spots.md) encountered along the way.
-* Robot now navigates smoothly and efficiently to goal pose specified in RVIZ.
+
+* Initial goal of [learning ROS](docs/learning-ROS.md) achieved.
+* Secondary goal of building a robot capable of autonomous navigation also achieved.
+    * Navigation parameters set to produce optimum driving performance under navigation stack control.
+    * Robot now navigates smoothly and efficiently to goal pose specified in RVIZ.
+    * All issues causing warnings and errors resolved.
 
