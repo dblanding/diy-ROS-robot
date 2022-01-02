@@ -21,12 +21,16 @@ The most complicated part I had to make was the 1/4 x 5 x 12 inch long piece of 
 
 ![Elegoo Tumbller Self-Balancing Robot Car](images/elegoo-tumbller.jpg)
 
-### Building the robot
+### Robot Configuration
 The design of the robot is intended to be as simple as possible, incorporating only the most essential features needed to enable it to navigate autonomously.
-* 2 wheel [differential drive](docs/differential-drive.md) configuration
-* Wheels driven by DC Gearmotors with integral encoders
 * Lidar
 * Inertial Measurement Unit (IMU)
+* 2 wheel [differential drive](docs/differential-drive.md) configuration
+    * Wheels driven by DC Gearmotors with integral encoders
+    * L298N motor controller board
+    * Enhanced gpio performance with [pigpio library](http://abyz.me.uk/rpi/pigpio/python.html) (no need for Arduino)
+        * pi gpio pins are quick enough to count encoder pulses
+        * provides PWM pin output to drive motors
 
 ### Configuring ROS on board the robot
 The `my_robot` folder contains all the code that goes in robot's catkin_ws/src directory.
