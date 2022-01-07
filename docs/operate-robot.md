@@ -1,7 +1,7 @@
 # Robot Operation / Current Status
 This is intended to be an up-to-date summary of how to run the robot.
 
-December 25, 2021
+January 6, 2022
 ### SLAM Mapping
 
 * Start roscore on raspi4: `roscore`
@@ -9,7 +9,7 @@ December 25, 2021
 * Log on to robot: `ssh ubuntu@robot`
     * Make sure pigpiod is running: `sudo pigpiod`
     * Start nodes on robot: `roslaunch bringup bringup.launch`
-    * Start gmapping: `roslaunch robo_nav gmapping.launch`
+    * Start gmapping: `roslaunch robot_nav gmapping.launch`
 * Start RVIZ with saved config: `rviz -d ~/robot.rviz`
 * Start keyboard teleop: `rosrun teleop_twist_keyboard teleop_twist_keyboard.py`
     * Or `rosrun rqt_robot_steering rqt_robot_steering`

@@ -1,10 +1,10 @@
 # LEARNING ROS: How I came up the ROS learning curve.
-ROS has a reputaion for having a pretty formidable learning curve. So when I decided to tackle learning ROS, I knew it would be a pretty long slog. Nevertheless, I already had some of the prerequisite skills. I knew my way (pretty well) around these subjects:
+ROS has a reputaion for having a pretty formidable learning curve. So when I decided to tackle learning ROS, I knew it would be a pretty long slog. Nevertheless, I already had some of the prerequisite skills. I had a working knowledge (certainly not expert) of these subjects:
 * Linux
 * Python
 * Raspberry Pi and its gpio to interface with sensors and actuators
 
-Initially, I didn't have ROS installed on my PC. So I got started by signing up for the [Robot Ignite Academy](https://www.theconstructsim.com) online courses:
+Initially, I didn't have ROS installed on my PC. Actually, I was away from home. So I got started by signing up for the [Robot Ignite Academy](https://www.theconstructsim.com) and took these two online courses:
 * ROS Basics in 5 Days (Python)
 * ROS Navigation in 5 days
 
@@ -16,7 +16,6 @@ So, here is the summary of that process.
 * I ran through a bunch of [ROS Tutorials](http://wiki.ros.org/ROS/Tutorials)
 * I did the [TurtleBot3 Simulation Tutorial](https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/)
 * I then undertook to build [my own robot](https://github.com/dblanding/diy-ROS-robot) with capabilities similar to TB3.
-* Once I started building my own robot, certainly the **best** investment I made was to purchase Lloyd Brombach's excellent book [Practical Robotics in C++](https://www.amazon.com/Practical-Robotics-Program-Autonomous-Raspberry-ebook/dp/B08VDP2ZP5). It's up-to-date and packed with practical knowledge about every aspect of building your first robot. And it's very clearly written. I was afraid that the C++ would make it dry (Since I'm a Python guy), but even the C++ code was presented in a way that made it easy to grasp.
-
-[Here](sticky-spots.md) is a summary of some of the problems I encountered along the way and how I resolved them.
+* Once I started building my own robot, certainly the **best** investment I made was to purchase Lloyd Brombach's excellent book [Practical Robotics in C++](https://www.amazon.com/Practical-Robotics-Program-Autonomous-Raspberry-ebook/dp/B08VDP2ZP5). It's up-to-date and packed with practical knowledge about every aspect of building your first robot. And it's very clearly written. I was afraid that the C++ would make it dry (I'm a Python guy), but even the C++ code was presented in a way that made it easy to grasp.
+* While building the robot and getting it working, I encountered and resolved [various issues](sticky-spots.md) along the way.
 

@@ -7,7 +7,7 @@
     * Install ros-tutorials on robot: `$ sudo apt-get install ros-noetic-ros-tutorials`
     * Add each other's host name in /etc/hosts file
 * Edit ~/.bashrc to source ~/catkin_ws/devel/setup.bash
-* Add [rplidar package](rplidar/rplidar.md)
+* Add [rplidar package](http://wiki.ros.org/rplidar)
 
 * Set up passwordless ssh login to robot, following the steps at [How to setup SSH login without password on Linux systems](https://thelinuxgurus.com/how-to-setup-ssh-login-without-password/).
 

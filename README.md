@@ -23,8 +23,8 @@ The most complicated part I had to make was the 1/4 x 5 x 12 inch long piece of 
 
 ### Robot Configuration
 The design of the robot is intended to be as simple as possible, incorporating only the most essential features needed to enable it to navigate autonomously.
-* Lidar
-* Inertial Measurement Unit (IMU)
+* Lidar: [RPLidar A1](http://wiki.ros.org/rplidar)
+* IMU: [Bosch BNO055 IMU](http://wiki.ros.org/ros_imu_bno055)
 * 2 wheel [differential drive](docs/differential-drive.md) configuration
     * Wheels driven by DC Gearmotors with integral encoders
     * L298N motor controller board
@@ -35,7 +35,7 @@ The design of the robot is intended to be as simple as possible, incorporating o
 ### Configuring ROS on board the robot
 The `my_robot` folder contains all the code that goes in robot's catkin_ws/src directory.
 
-[Here](setup-operate/setup-2nd-computer.md) are the details of the configuration and setup of the robot onboard computer.
+[Here](docs/setup-2nd-computer.md) are the details of the configuration and setup of the robot onboard computer.
 
 
 ### Using the ROS Navigation Stack
@@ -46,9 +46,9 @@ This is where ROS really shines. This is what makes ROS so powerful. There is no
 
 Navigation is launched from the `robo_nav` package, residing inside the `my_robot` folder. And there really isn't very much there. Just some launch files, parameters, and maps.
 
-To operate the robot, refer to these [operating instructions](setup-operate/operate-robot.md).
+To operate the robot, refer to these [operating instructions](docs/operate-robot.md).
 
-[Here](setup-operate/ubuntu-install.md) are the details of the setup and configuration of the raspi4 computer.
+[Here](docs/ubuntu-install.md) are the details of the setup and configuration of the raspi4 computer.
 
 ### DIY robot makes its maiden voyage
 On 11/27/21, the DIY robot made its first trip under the control of the ROS Navigation Stack. It wasn't a very smooth or efficient looking route (and the navigation stack was producing lots of warnings and errors) but the robot managed to complete its first trip to a goal pose specified in RVIZ.
