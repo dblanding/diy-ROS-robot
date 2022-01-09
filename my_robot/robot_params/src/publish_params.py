@@ -14,20 +14,22 @@ ROBOT_TICKS_PER_REV = 686.4  # 24:1 worm, 26:10 spur, 11 pole encoder magnet
 ROBOT_WHEEL_CIRCUMFERENCE = 0.213  # meters
 ROBOT_TICKS_PER_METER = int(ROBOT_TICKS_PER_REV / ROBOT_WHEEL_CIRCUMFERENCE)
 ROBOT_TRACK_WIDTH = .187  # Wheel Separation Distance (meters)
-ROBOT_MIN_PWM_VAL = 63  # Minimum PWM value that motors will turn
+ROBOT_MIN_PWM_VAL = 80  # Minimum PWM value motors will turn reliably
 ROBOT_MAX_PWM_VAL = 255  # Maximum allowable PWM value
-ROBOT_MIN_X_VEL = 0.04  # Minimum x velocity robot can manage (m/s)
+ROBOT_MIN_X_VEL = 0.1  # Minimum x velocity robot can manage (m/s)
 ROBOT_MAX_X_VEL = 0.25  # Maximum x velocity robot can manage (m/s)
-ROBOT_MIN_Z_VEL = 0.4  # Minimum theta-z velocity robot can manage (rad/s)
-ROBOT_MAX_Z_VEL = 2.5  # Maximum theta-z velocity robot can manage (rad/s)
+ROBOT_MIN_Z_VEL = 1.0  # Minimum theta-z velocity robot can manage (rad/s)
+ROBOT_MAX_Z_VEL = 3.0  # Maximum theta-z velocity robot can manage (rad/s)
 ROBOT_MTR_KP = 0.5  # Proportional coeff
 ROBOT_MTR_KD = 0.1  # Derivative coeff
-ROBOT_MTR_MAX_PID_TRIM = 20  # Max allowable value for PID trim term
+ROBOT_MTR_MAX_PID_TRIM = 30  # Max allowable value for PID trim term
 
 # end points of segments of piecewise linear curve in descending order
 # where curve relates tick rate (tr) to motor speed (s)
-ROBOT_TRS_CURVE = ((621, 145), (439, 109), (273, 92), (87, 81))
-
+ROBOT_TRS_CURVE = ((892, 240),
+                   (578, 140),
+                   (360, 100),
+                   (142, 80))
 
 param_dict = {
     'ROBOT_TICKS_PER_REV': ROBOT_TICKS_PER_REV,

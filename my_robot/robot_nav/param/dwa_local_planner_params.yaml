@@ -1,19 +1,19 @@
 DWAPlannerROS:
 
 # Robot Configuration Parameters (very similar to Turtlebot3 burger)
-  max_vel_x: 0.25
-  min_vel_x: -0.25
+  max_vel_x: 0.26
+  min_vel_x: -0.26
 
   max_vel_y: 0.0  # diff drive robot
   min_vel_y: 0.0  # diff drive robot
 
 
 # Velocity when robot is moving in a straight line
-  max_vel_trans: 0.22 # choose slightly less than the base's capability
-  min_vel_trans: 0.05  # this is the min trans velocity when there is negligible rotational velocity
+  max_vel_trans: 0.25 # choose slightly less than the base's capability
+  min_vel_trans: 0.1  # this is the min trans velocity when there is negligible rotational velocity
 
-  max_vel_theta: 2.0  # choose slightly less than the base's capability
-  min_vel_theta: 0.5  # this is the min angular velocity when there is negligible translational velocity
+  max_vel_theta: 3.0  # choose slightly less than the base's capability
+  min_vel_theta: 1.5  # this is the min angular velocity when there is negligible translational velocity
 
   acc_lim_x: 2.5
   acc_lim_y: 0.0      # diff drive robot

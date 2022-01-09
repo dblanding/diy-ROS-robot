@@ -19,7 +19,8 @@ import rospy
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Int32, Float32
 import pigpio
-import time
+
+MTR_DEBUG = False  # enable/disable printing of mtr pwm values
 
 # Set up gpio (Broadcom) pin aliases
 left_mtr_spd_pin = 17
@@ -46,7 +47,6 @@ MIN_PWM_VAL = rospy.get_param('ROBOT_MIN_PWM_VAL')
 MAX_PWM_VAL = rospy.get_param('ROBOT_MAX_PWM_VAL')
 MIN_X_VEL = rospy.get_param('ROBOT_MIN_X_VEL')
 
-turning_in_place = False  # Flag signifying robot is turning in place
 new_ttr = False  # Flag signifying target tick rate values are new
 L_ttr = 0  # Left wheel target tick rate
 R_ttr = 0  # Right wheel target tick rate
@@ -81,14 +81,8 @@ def convert_cmd_vels_to_target_tick_rates(x, theta):
     Set global flag to signify whether robot is turning in place.
     """
 
-    global L_ttr, R_ttr, new_ttr, turning_in_place
+    global L_ttr, R_ttr, new_ttr
 
-    # Set global flag to signify turning in place.
-    if x < MIN_X_VEL and theta:
-        turning_in_place = True
-    else:
-        turning_in_place = False
-    
     # Superimpose linear and angular components of robot velocity
     vel_L_wheel = x - (theta * (TRACK_WIDTH / 2))
     vel_R_wheel = x + (theta * (TRACK_WIDTH / 2))
@@ -111,9 +105,10 @@ def tr_to_spd(tick_rate):
     The empirical relationship between target tick rate and the spd signal
     sent to the motors has been found to roughly follow a parabolic curve
     with shallower slope at low speed. This relationship is pretty closely
-    approximated by a piecewise linear curve comprised of 3 linear segments.
-    The tick_rate & mtr_spd values of the segment end points are defined
-    in the tuple TRS_CURVE ((tr3, sp3), (tr2, sp2), (tr1, sp1), (tr0, sp0))
+    approximated by a piecewise linear curve comprised of linked chain of
+    linear segments.
+    The tick_rate & mtr_spd values of the segment end points are defined in
+    the tuple TRS_CURVE ((trn, spn), ... (tr, sp2), (tr1, sp1), (tr0, sp0))
 
     In the present algorithm, the tick rate is examined to see which segment
     applies to it, starting with the steepest (highest value). The applicable
@@ -172,6 +167,8 @@ def set_mtr_spd(pi, latr, ratr):
     if new_ttr:
         L_spd = tr_to_spd(L_ttr)
         R_spd = tr_to_spd(R_ttr)
+        assert L_spd >= 0
+        assert R_spd >= 0
 
         # Determine L & R modes
         if L_ttr > 0:
@@ -221,14 +218,14 @@ def set_mtr_spd(pi, latr, ratr):
     R_pro = int(R_err * KP)
 
     # Calculate derivative term
-    L_der = int((L_err - L_prev_err) * KD)
-    R_der = int((R_err - R_prev_err) * KD)
+    L_der = (L_err - L_prev_err) * KD
+    R_der = (R_err - R_prev_err) * KD
     L_prev_err = L_err
     R_prev_err = R_err
 
-    # Combine terms and apply max limit
-    L_pid_trim = L_pro + L_der
-    R_pid_trim = R_pro + R_der
+    # Combine terms and integerize
+    L_pid_trim = int(L_pro + L_der)
+    R_pid_trim = int(R_pro + R_der)
 
     # Limit value of PID trim
     if L_pid_trim > MAX_PID_TRIM:
@@ -240,9 +237,12 @@ def set_mtr_spd(pi, latr, ratr):
     elif R_pid_trim < -MAX_PID_TRIM:
         R_pid_trim = -MAX_PID_TRIM
 
-    # Add PID feedback to minimize error 
+    # Add PID feedback to minimize error
     L_PWM_val = L_spd + L_pid_trim
     R_PWM_val = R_spd + R_pid_trim
+
+    if L_spd and MTR_DEBUG:
+        print(f"R_spd={R_spd}\tR_pid_trim={R_pid_trim}\t\tL_spd={L_spd}\tL_pid_trim={L_pid_trim}")
 
     # Limit PWM values to acceptable range
     if R_PWM_val > MAX_PWM_VAL:
@@ -368,7 +368,6 @@ if __name__ == '__main__':
     prev_right_pos = 0
     prev_L_atr = 0
     prev_R_atr = 0
-    newness = 0
     prev_time = rospy.Time.now().to_sec()
     while not rospy.is_shutdown():
         # publish cumulative tick data
