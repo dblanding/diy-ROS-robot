@@ -73,4 +73,7 @@ As it turns out, this was a good approach.
     * Navigation parameters set to produce optimum driving performance under navigation stack control.
     * Robot now navigates smoothly and efficiently to goal pose specified in RVIZ.
     * All issues causing warnings and errors resolved.
+* Here is a split screen video showing the robot making a trip from the office, through the dining room and into the kitchen in real time. Now how cool is that? Robotics is such a great hobby, thanks in large part to ROS!
+
+![trip from office to kitchen](videos/Robot.mp4)
 
