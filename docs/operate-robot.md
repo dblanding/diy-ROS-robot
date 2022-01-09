@@ -1,7 +1,16 @@
 # Robot Operation / Current Status
 This is intended to be an up-to-date summary of how to run the robot.
 
-January 6, 2022
+January 9, 2022
+
+### Motor Speed Calibration
+* Start roscore on raspi4: `roscore`
+* Place robot on the floor with plenty of space ahead
+* Log on to robot: `ssh ubuntu@robot`
+    * Make sure pigpiod is running: `sudo pigpiod`
+    * Launch motor calibrator tool: `roslaunch wheels motor_calibrator.launch`
+    * See [Motor Speed Control](motor-speed-control.md) for more detail.
+
 ### SLAM Mapping
 
 * Start roscore on raspi4: `roscore`

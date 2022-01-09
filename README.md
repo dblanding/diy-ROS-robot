@@ -31,6 +31,7 @@ The design of the robot is intended to be as simple as possible, incorporating o
     * Enhanced gpio performance with [pigpio library](http://abyz.me.uk/rpi/pigpio/python.html) (no need for Arduino)
         * pi gpio pins are quick enough to count encoder pulses
         * provides PWM pin output to drive motors
+    * See [how motor speed control works](docs/motor-speed-control.md)
 
 ### Configuring ROS on board the robot
 The `my_robot` folder contains all the code that goes in robot's catkin_ws/src directory.
