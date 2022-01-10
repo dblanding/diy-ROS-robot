@@ -18,10 +18,10 @@ ROBOT_MIN_PWM_VAL = 80  # Minimum PWM value motors will turn reliably
 ROBOT_MAX_PWM_VAL = 255  # Maximum allowable PWM value
 ROBOT_MIN_X_VEL = 0.1  # Minimum x velocity robot can manage (m/s)
 ROBOT_MAX_X_VEL = 0.25  # Maximum x velocity robot can manage (m/s)
-ROBOT_MIN_Z_VEL = 1.0  # Minimum theta-z velocity robot can manage (rad/s)
+ROBOT_MIN_Z_VEL = 0.8  # Minimum theta-z velocity robot can manage (rad/s)
 ROBOT_MAX_Z_VEL = 3.0  # Maximum theta-z velocity robot can manage (rad/s)
 ROBOT_MTR_KP = 0.5  # Proportional coeff
-ROBOT_MTR_KD = 0.1  # Derivative coeff
+ROBOT_MTR_KD = 0.2  # Derivative coeff
 ROBOT_MTR_MAX_PID_TRIM = 30  # Max allowable value for PID trim term
 
 # end points of segments of piecewise linear curve in descending order

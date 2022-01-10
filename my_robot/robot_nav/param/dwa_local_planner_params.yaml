@@ -13,7 +13,7 @@ DWAPlannerROS:
   min_vel_trans: 0.1  # this is the min trans velocity when there is negligible rotational velocity
 
   max_vel_theta: 3.0  # choose slightly less than the base's capability
-  min_vel_theta: 1.5  # this is the min angular velocity when there is negligible translational velocity
+  min_vel_theta: 0.8  # this is the min angular velocity when there is negligible translational velocity
 
   acc_lim_x: 2.5
   acc_lim_y: 0.0      # diff drive robot
