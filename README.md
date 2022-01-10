@@ -54,7 +54,7 @@ To operate the robot, refer to these [operating instructions](docs/operate-robot
 ### DIY robot makes its maiden voyage
 On 11/27/21, the DIY robot made its first trip under the control of the ROS Navigation Stack. It wasn't a very smooth or efficient looking route (and the navigation stack was producing lots of warnings and errors) but the robot managed to complete its first trip to a goal pose specified in RVIZ.
 
-![First excursion using RVIZ](videos/IMG_2534.mp4)
+https://user-images.githubusercontent.com/53412304/148826107-439ce96d-d5c6-48b3-8599-9f98fdcbd351.mp4
 
 Being a novice, it wasn't obvious to me what was causing all these warnings and errors. So I decided on a "divide and conquer" approach. I decided to make my robot behave similarly to the Turtlebot3 Burger. That way I could just copy the navigation parameters from the Burger and hopefully the navigation performance would be fine. And if not, then maybe the problem is elsewhere.
 
