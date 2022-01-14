@@ -45,7 +45,7 @@ This is where ROS really shines. This is what makes ROS so powerful. There is no
 * Localization using AMCL
 * Path Planning to find the best route from initial pose to goal pose.
 
-Navigation is launched from the `robo_nav` package, residing inside the `my_robot` folder. And there really isn't very much there. Just some launch files, parameters, and maps.
+Navigation is launched from the `robot_nav` package, residing inside the `my_robot` folder. And there really isn't very much there. Just some launch files, parameters, and maps.
 
 To operate the robot, refer to these [operating instructions](docs/operate-robot.md).
 

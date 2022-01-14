@@ -2,7 +2,7 @@
 The main thing that we need to get right with our autonomous robot is to make sure the robot's actual velocity matches the commanded velocity. Without that, all bets are off when it comes to its performance while trying to navigate autonomously. Here is the process used to achieve this goal.
 ### In theory:
 * Listen on the /cmd_vel topic for Twist message then find the two component parts:
-    * liniear velocity (meters/sec)
+    * linear velocity (meters/sec)
     * angualar velocity (radians/sec)
 * Convert these two velocity components to velocities (meters/sec) at the right and left wheels.
 * Convert right and left wheel velocities to right and left motor tick rates (ticks/sec).
