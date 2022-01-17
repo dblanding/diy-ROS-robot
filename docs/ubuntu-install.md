@@ -42,7 +42,8 @@
 * Install python mathutils library `pip install mathutils` (Has a handy utility function used to normalize quaternion.)
 * Install Jupyter Notebook: [How to Install Jupyter Notebook on Ubuntu 20.04 / 18.04](https://speedysense.com/install-jupyter-notebook-on-ubuntu-20-04/). (This isn't actually needed. I installed this when I was trying to learn more about why I couldn't get robot-pose-ekf node working.)
     * Create ~/notebook/ directory (in home dir)
-    * Cloned [Kalman-and-Bayesian-Filters-in-Python](https://github.com/rlabbe/Kalman-and-Bayesian-Filters-in-Python)/ under /notebook
+    * Cloned [Kalman-and-Bayesian-Filters-in-Python](https://github.com/rlabbe/Kalman-and-Bayesian-Filters-in-Python) under ~/notebook
+    * Cloned [Think Autonomous Stereo Vision Course](https://github.com/Jeremy26/stereo_vision_course) under ~/notebook
     * To enter jupyter virtual env: `source notebook/jupyterenv/bin/activate`
     * Within jupyterenv, pip install the following:
         * scipy
@@ -50,6 +51,7 @@
         * matplotlib
         * filterpy
         * sympy
+        * opencv-python
     * To start: `jupyter notebook`
 * Install Caja Share (samba) allowing files on robot to be opened in Caja (This is pretty handy. It allows editing files on robot from raspi4.)
 * Install git -> git version 2.25.1 already installed!
