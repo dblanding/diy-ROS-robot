@@ -76,3 +76,7 @@ As it turns out, this was a good approach.
 * Here is a split screen video showing the robot making a trip from the office, through the dining room and into the kitchen in real time. Now how cool is that? Robotics is such a great hobby, thanks in large part to ROS!
 
 https://user-images.githubusercontent.com/53412304/148745637-946173ff-d5c7-4747-9fac-c8e4dd46d131.mp4
+
+This next video is the return trip, created on Kapwing, a free online video editing service with the capabiltiy of compositing multiple videos.
+
+https://user-images.githubusercontent.com/53412304/150647122-91798707-5ee4-4138-861e-a0de373af5b5.mp4
