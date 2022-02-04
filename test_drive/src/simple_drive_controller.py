@@ -35,10 +35,12 @@ new_goal = False
 pose = (0.0, 0.0, 0.0)  # (x_pose, y_pose, heading_pose)
 goal = (0.0, 0.0, 0.0)  # (x_goal, y_goal, heading_goal)
 
+
 def goal_listener():
     """Listen to /move_base_simple/goal topic. Send msg to goal_callback. """
     rospy.Subscriber("/move_base_simple/goal",
                      PoseStamped, goal_callback)
+
 
 def goal_callback(msg):
     """Extract pose position and orientation from PoseStamped msg."""
@@ -50,13 +52,19 @@ def goal_callback(msg):
     new_goal = True
     goal = (x, y, yaw)
 
+
 def pose_listener():
-    """Listen to /robot_pose_ekf/odom_combined topic. Send msg to pose_callback."""
+    """
+    Listen to /robot_pose_ekf/odom_combined topic. Send msg to pose_callback.
+    """
     rospy.Subscriber("/robot_pose_ekf/odom_combined",
                      PoseWithCovarianceStamped, pose_callback)
 
+
 def pose_callback(msg):
-    """Extract pose position and orientation from PoseWithCovarianceStamped msg."""
+    """
+    Extract pose position and orientation from PoseWithCovarianceStamped msg.
+    """
     global pose
     x_position = msg.pose.pose.position.x  # meters
     y_position = msg.pose.pose.position.y  # meters
@@ -64,11 +72,13 @@ def pose_callback(msg):
     roll, pitch, yaw = get_rotation(quaternion)
     pose = (x_position, y_position, yaw)
 
-def get_rotation (quaternion):
+
+def get_rotation(quaternion):
     """Convert quaternion to euler angles."""
     quat_list = [quaternion.x, quaternion.y, quaternion.z, quaternion.w]
     roll, pitch, yaw = euler_from_quaternion(quat_list)
     return roll, pitch, yaw
+
 
 def get_turn_angle():
     """Calculate turn angle needed to put goal straight ahead."""
@@ -77,11 +87,13 @@ def get_turn_angle():
     angle_to_turn = angle_rel - heading_pose
     return angle_to_turn
 
+
 def dist_to_goal():
     """Calculate distance to goal (m)"""
     x_rel, y_rel, _ = goal_wrt_pose()
     dist = math.sqrt(x_rel**2 + y_rel**2)
     return dist
+
 
 def goal_wrt_pose():
     """Calculate relative dist and angle of goal w/r/t robot."""
@@ -91,6 +103,7 @@ def goal_wrt_pose():
     y_rel = y_goal - y_pose
     angle_rel = math.atan2(y_rel, x_rel)
     return x_rel, y_rel, angle_rel
+
 
 def turn_in_place():
     """Turn in place so that goal is straight ahead of robot."""
@@ -108,6 +121,7 @@ def turn_in_place():
     cmd_vel.angular.z = 0.0
     drive.publish(cmd_vel)
     rospy.loginfo(f"Finished Turn. Angle to Goal is {angle_to_turn:.4f} rad")
+
 
 def drive_to_goal():
     """Drive straight to goal and stop when one of the following occurs:
@@ -134,6 +148,7 @@ def drive_to_goal():
     drive.publish(cmd_vel)
     rospy.loginfo(f"Arrived at goal. Distance to goal is {goal_dist:.2f} m")
     new_goal = False
+
 
 if __name__ == "__main__":
 
