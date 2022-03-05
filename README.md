@@ -4,7 +4,7 @@ At the time, I was curious about learning ROS and I also wondered if the Raspi4
 would be suitable for use as a desktop computer. Could the new Raspi handle the
 rigors of running ROS, and if so, wouldn't that be great to enable me to pursue my ROS education?
 
-The answer to both questions turned out to be YES, and so this inital curiosity has led me to tackle this project.
+The answer to both questions turned out to be YES, and so this inital curiosity has led me to tackle this project. Read on for the technical details. There is also an overview summary article [here](https://dougblanding.medium.com/my-first-medium-article-4ff3eab725ec).
 
 A Raspberry Pi 3B+ computer is used onboard the robot, while
 the Raspi4 has found use as my desktop computer. Here's an early picture of the robot before the IMU was in place.
