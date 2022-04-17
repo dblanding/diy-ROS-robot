@@ -21,6 +21,7 @@
     * None of the markdown viewer extensions worked.
     * Solution: Create a new mime type and update mime database
         * [How to get the Markdown Viewer addon of Firefox to work on Linux](https://superuser.com/questions/696361/how-to-get-the-markdown-viewer-addon-of-firefox-to-work-on-linux/1175837#1175837)
+* Alternatively, use Markdown Viewer Webext addon to Firefox
 * Resolve `/usr/bin/env: ‘python’: No such file or directory` errors running python programs starting with `!#/usr/bin/env python`
     * Added symbolic link. `sudo ln -s python3 /usr/bin/python`
 * Add robot (and raspi80) to /etc/hosts
